@@ -3,3 +3,9 @@ db-up:
 
 db-down:
 	docker compose up -d
+
+build:
+	go build -o bin/pm4devs-backend
+
+run: build
+	./bin/pm4devs-backend
