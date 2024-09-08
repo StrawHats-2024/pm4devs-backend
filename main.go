@@ -1,31 +1,30 @@
 package main
 
 import (
-	// "fmt"
+	"fmt"
 	"log"
+
 	// "pm4devs-backend/internals/server"
+	"pm4devs-backend/internals/server"
 	"pm4devs-backend/pkg/db"
-	"pm4devs-backend/pkg/models"
-	"time"
 )
 
-// import "net/http"
 func main() {
 	store, err := db.NewPostgresStore()
 	if err != nil {
 		log.Fatal(err)
 	}
+	// user, err := server.NewUser("testing2", "parikshith")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// userid, err := store.CreateUser(user)
+	//  fmt.Println("userid: ", userid);
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	// server := server.NewAPIServer(":5000", store)
-	err = store.CreateUser(models.User{Email: "testing", PasswordHash: "slfjsdlfjsldkfjslfjsdl", CreatedAt: time.Now()})
-	if err != nil {
-		panic(err)
-	}
-	// fmt.Println("server: ", server)
-	// http.HandleFunc("/reg", auth.HandleUserReg)
-	// http.HandleFunc("/home", Home)
-	// http.HandleFunc("/refresh", Refresh)
-
-	// log.Fatal(http.ListenAndServe(":8080", nil))
-
+	fmt.Println("Starting....")
+	server := server.NewAPIServer(":3000", store)
+	server.Run()
 }

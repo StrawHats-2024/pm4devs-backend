@@ -11,8 +11,9 @@ import (
 )
 
 type Storage interface {
-	CreateUser(models.User) error
+	CreateUser(*models.User) (int, error)
 	GetUserById(int) (*models.User, error)
+	GetUserByEmail(string) (*models.User, error)
 }
 
 type PostgresStore struct {
@@ -38,44 +39,57 @@ func NewPostgresStore() (*PostgresStore, error) {
 	}, nil
 }
 
-func (pg *PostgresStore) CreateUser(user models.User) error {
-  fmt.Println("user: ", user);
-	query := `INSERT INTO Users (email, password_hash, last_login) VALUES ($1, $2, $3)`
-	row, err := pg.db.Query(
+func (pg *PostgresStore) CreateUser(user *models.User) (int, error) {
+
+	query := `INSERT INTO Users (email, password_hash, created_at) VALUES ($1, $2, $3) RETURNING user_id`
+
+	// Use QueryRow to get the newly created user_id
+	var userId int
+	err := pg.db.QueryRow(
 		query,
 		user.Email,
 		user.PasswordHash,
 		user.CreatedAt,
-	)
-	newUser, err := scanIntoUser(row)
-	fmt.Println("newUser: ", newUser)
+	).Scan(&userId)
+
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	fmt.Println("New User ID: ", user.UserID)
+	return userId, nil
 }
-
 func (pg *PostgresStore) GetUserById(id int) (*models.User, error) {
 	query := `
-  SELECT email, created_at
+  SELECT *
   FROM Users
   WHERE user_id = $1;
   `
-	row, err := pg.db.Query(query, id)
-	if err != nil {
-		return nil, err
-	}
-	user, err := scanIntoUser(row)
+	user := new(models.User)
+	err := pg.db.QueryRow(query, id).Scan(
+		&user.UserID,
+		&user.Email,
+		&user.PasswordHash,
+		&user.CreatedAt,
+		&user.LastLogin,
+	)
 	if err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
-func scanIntoUser(rows *sql.Rows) (*models.User, error) {
+func (pg *PostgresStore) GetUserByEmail(email string) (*models.User, error) {
+	query := `
+  SELECT *
+  FROM Users
+  WHERE email = $1;
+  `
+	// Initialize a User struct to hold the result
 	user := new(models.User)
-	err := rows.Scan(
+
+	// Use QueryRow to fetch the single row based on email
+	err := pg.db.QueryRow(query, email).Scan(
 		&user.UserID,
 		&user.Email,
 		&user.PasswordHash,
@@ -83,5 +97,22 @@ func scanIntoUser(rows *sql.Rows) (*models.User, error) {
 		&user.LastLogin,
 	)
 
-	return user, err
+	// Handle the case where no row is found
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("user with email %s not found", email)
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+func (pg *PostgresStore) UpdateLastLogin(userID int) error {
+	query := `
+    UPDATE Users
+    SET last_login = CURRENT_TIMESTAMP
+    WHERE user_id = $1;
+    `
+	_, err := pg.db.Exec(query, userID)
+	return err
 }

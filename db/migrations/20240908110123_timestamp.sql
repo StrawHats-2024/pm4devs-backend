@@ -1,3 +1,4 @@
+
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE Users (
@@ -5,7 +6,7 @@ CREATE TABLE Users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP
+    last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE Secret (
@@ -49,16 +50,14 @@ CREATE TABLE AuditLog (
     details TEXT,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE User;
-DROP TABLE Secret;
-DROP TABLE Group;
-DROP TABLE UserGroup;
-DROP TABLE SharedSecret;
-DROP TABLE AuditLog;
-
+DROP TABLE IF EXISTS SharedSecret;
+DROP TABLE IF EXISTS UserGroup;
+DROP TABLE IF EXISTS AuditLog;
+DROP TABLE IF EXISTS Secret;
+DROP TABLE IF EXISTS Groups;
+DROP TABLE IF EXISTS Users;
 -- +goose StatementEnd
