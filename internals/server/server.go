@@ -26,6 +26,9 @@ func (s *APIServer) Run() {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/auth/register", makeHTTPHandleFunc(s.handleRegister))
+	router.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+		WriteJSON(w, http.StatusOK, "working fine")
+	})
 	router.HandleFunc("/auth/login", makeHTTPHandleFunc(s.handleLogin))
 	router.HandleFunc("/auth/logout", makeHTTPHandleFunc(s.handleLogout))
 	router.HandleFunc("/auth/refresh", makeHTTPHandleFunc(s.handleTokenRefresh))

@@ -24,14 +24,13 @@ type LoginRes struct {
 type UserRegReq struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Username string `json:"username"`
 }
-
 type UserRegRes struct {
 	Token   string `json:"token"`
 	Message string `json:"message"`
 	UserId  int64  `json:"user_id"`
 }
-
 
 func (s *APIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	if r.Method != "POST" {
@@ -91,7 +90,7 @@ func (s *APIServer) handleRegister(w http.ResponseWriter, r *http.Request) error
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
-	user, err := NewUser(req.Email, req.Password)
+	user, err := NewUser(req.Email, req.Password, req.Username)
 	if err != nil {
 		return err
 	}
@@ -124,7 +123,7 @@ func (s *APIServer) handleTokenRefresh(w http.ResponseWriter, r *http.Request) e
 	return nil
 }
 
-func NewUser(email, password string) (*models.User, error) {
+func NewUser(email, username, password string) (*models.User, error) {
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
@@ -132,6 +131,7 @@ func NewUser(email, password string) (*models.User, error) {
 	return &models.User{
 		Email:        email,
 		PasswordHash: string(passwordHash),
+		Username:     username,
 		CreatedAt:    time.Now().UTC(),
 		LastLogin:    time.Now().UTC(),
 	}, nil
@@ -162,4 +162,3 @@ func (s *APIServer) handleLogout(w http.ResponseWriter, r *http.Request) error {
 
 	return nil
 }
-

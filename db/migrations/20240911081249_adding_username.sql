@@ -62,3 +62,4 @@ DROP TABLE IF EXISTS Secret;
 DROP TABLE IF EXISTS Groups;
 DROP TABLE IF EXISTS Users;
 -- +goose StatementEnd
+
