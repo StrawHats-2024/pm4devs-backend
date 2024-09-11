@@ -10,13 +10,14 @@ import (
 
 func (pg *PostgresStore) CreateUser(user *models.User) (int, error) {
 
-	query := `INSERT INTO Users (email, password_hash, created_at) VALUES ($1, $2, $3) RETURNING user_id`
+	query := `INSERT INTO Users (email, username, password_hash, created_at) VALUES ($1, $2, $3, $4) RETURNING user_id`
 
 	// Use QueryRow to get the newly created user_id
 	var userId int
 	err := pg.db.QueryRow(
 		query,
 		user.Email,
+		user.Username,
 		user.PasswordHash,
 		user.CreatedAt,
 	).Scan(&userId)
@@ -30,7 +31,7 @@ func (pg *PostgresStore) CreateUser(user *models.User) (int, error) {
 }
 func (pg *PostgresStore) GetUserById(id int) (*models.User, error) {
 	query := `
-  SELECT *
+  SELECT (user_id, email, username, password_hash, created_at, last_login)
   FROM Users
   WHERE user_id = $1;
   `
@@ -38,11 +39,13 @@ func (pg *PostgresStore) GetUserById(id int) (*models.User, error) {
 	err := pg.db.QueryRow(query, id).Scan(
 		&user.UserID,
 		&user.Email,
+		&user.Username,
 		&user.PasswordHash,
 		&user.CreatedAt,
 		&user.LastLogin,
 	)
 	if err != nil {
+    fmt.Println("err: ", err);
 		return nil, err
 	}
 	return user, nil
@@ -89,6 +92,7 @@ func (pg *PostgresStore) GetUserByEmail(email string) (*models.User, error) {
 	err := pg.db.QueryRow(query, email).Scan(
 		&user.UserID,
 		&user.Email,
+		&user.Username,
 		&user.PasswordHash,
 		&user.CreatedAt,
 		&user.LastLogin,

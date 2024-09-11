@@ -90,12 +90,14 @@ func (s *APIServer) handleRegister(w http.ResponseWriter, r *http.Request) error
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
-	user, err := NewUser(req.Email, req.Password, req.Username)
+	user, err := NewUser(req.Email, req.Username, req.Password)
 	if err != nil {
 		return err
 	}
 	userId, err := s.store.CreateUser(user)
 	if err != nil {
+		fmt.Printf("user: %+v", user)
+		fmt.Println("err: ", err)
 		return err
 	}
 
