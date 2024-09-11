@@ -45,7 +45,7 @@ func (pg *PostgresStore) GetUserById(id int) (*models.User, error) {
 		&user.LastLogin,
 	)
 	if err != nil {
-    fmt.Println("err: ", err);
+		fmt.Println("err: ", err)
 		return nil, err
 	}
 	return user, nil
