@@ -8,6 +8,6 @@ require (
 )
 
 require (
-	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gorilla/mux v1.8.1
 )

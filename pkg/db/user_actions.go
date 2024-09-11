@@ -50,7 +50,7 @@ func (pg *PostgresStore) GetUserById(id int) (*models.User, error) {
 
 func (pg *PostgresStore) GetAllUsers() ([]*models.User, error) {
 	query := `
-  SELECT *
+  SELECT user_id, email, created_at, last_login
   FROM Users;
   `
 	rows, err := pg.db.Query(query)
@@ -65,7 +65,6 @@ func (pg *PostgresStore) GetAllUsers() ([]*models.User, error) {
 		err := rows.Scan(
 			&user.UserID,
 			&user.Email,
-			&user.PasswordHash,
 			&user.CreatedAt,
 			&user.LastLogin,
 		)

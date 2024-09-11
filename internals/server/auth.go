@@ -8,7 +8,6 @@ import (
 	"pm4devs-backend/pkg/models"
 	"time"
 
-	jwt "github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -33,6 +32,7 @@ type UserRegRes struct {
 	UserId  int64  `json:"user_id"`
 }
 
+
 func (s *APIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -56,19 +56,20 @@ func (s *APIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
 		WriteJSON(w, http.StatusUnauthorized, ApiError{Error: "Wrong password or email"})
 		return nil
 	}
-	token, err := createToken(user.Email)
+	token, err := createJWT(user)
 	if err != nil {
 		log.Fatal(err)
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:    "token",
 		Value:   token,
+		Path:    "/",
 		Expires: time.Now().Add(time.Hour * 24),
 	})
-  err = s.store.UpdateLastLogin(user.UserID)
-  if err != nil {
-    return err
-  }
+	err = s.store.UpdateLastLogin(user.UserID)
+	if err != nil {
+		return err
+	}
 	err = WriteJSON(w, http.StatusOK, LoginRes{
 		Token:  token,
 		UserId: int64(user.UserID),
@@ -76,6 +77,7 @@ func (s *APIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	return nil
 
 }
+
 func (s *APIServer) handleRegister(w http.ResponseWriter, r *http.Request) error {
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -98,13 +100,14 @@ func (s *APIServer) handleRegister(w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 
-	token, err := createToken(user.Email)
+	token, err := createJWT(user)
 	if err != nil {
 		log.Fatal(err)
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:    "token",
 		Value:   token,
+		Path:    "/",
 		Expires: time.Now().Add(time.Hour * 24),
 	})
 	err = WriteJSON(w, http.StatusOK, UserRegRes{
@@ -121,24 +124,6 @@ func (s *APIServer) handleTokenRefresh(w http.ResponseWriter, r *http.Request) e
 	return nil
 }
 
-// TODO: Make secretKey env
-var secretKey = []byte("secret-key")
-
-func createToken(email string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
-		jwt.MapClaims{
-			"email": email,
-			"exp":   time.Now().Add(time.Hour * 24).Unix(),
-		})
-
-	tokenString, err := token.SignedString(secretKey)
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
 func NewUser(email, password string) (*models.User, error) {
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -152,18 +137,29 @@ func NewUser(email, password string) (*models.User, error) {
 	}, nil
 }
 
-func verifyToken(tokenString string) error {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return secretKey, nil
+func (s *APIServer) handleLogout(w http.ResponseWriter, r *http.Request) error {
+	// Check if the request method is POST
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return fmt.Errorf("method not allowed %s", r.Method)
+	}
+
+	// Clear the token by setting the cookie expiration date to a past date
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Value:   "",                             // Empty token value
+		Path:    "/",                            // Ensure it applies to the whole site
+		Expires: time.Now().Add(-1 * time.Hour), // Set to a past time to invalidate the cookie
 	})
 
+	// Respond with a successful logout message
+	err := WriteJSON(w, http.StatusOK, map[string]string{
+		"message": "Successfully logged out",
+	})
 	if err != nil {
 		return err
 	}
 
-	if !token.Valid {
-		return fmt.Errorf("invalid token")
-	}
-
 	return nil
 }
+

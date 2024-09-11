@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"pm4devs-backend/pkg/db"
@@ -26,12 +27,56 @@ func (s *APIServer) Run() {
 
 	router.HandleFunc("/auth/register", makeHTTPHandleFunc(s.handleRegister))
 	router.HandleFunc("/auth/login", makeHTTPHandleFunc(s.handleLogin))
-	// router.HandleFunc("/account/{id}", withJWTAuth(makeHTTPHandleFunc(s.handleGetAccountByID), s.store))
+	router.HandleFunc("/auth/logout", makeHTTPHandleFunc(s.handleLogout))
 	router.HandleFunc("/auth/refresh", makeHTTPHandleFunc(s.handleTokenRefresh))
+	router.HandleFunc("/get/users", withAuth(makeHTTPHandleFunc(s.handleGetAllUsers)))
 	//
 	log.Println("JSON API server running on port: ", s.listenAddr)
 
 	http.ListenAndServe(s.listenAddr, router)
+}
+
+func withAuth(f http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("token")
+		if err != nil {
+			if err == http.ErrNoCookie {
+				// If the token is missing, return an unauthorized status
+				http.Error(w, "Missing token", http.StatusUnauthorized)
+				return
+			}
+			// For any other error, return a bad request status
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+
+		tokenString := cookie.Value
+		claims, err := validateToken(tokenString)
+		fmt.Println("claims: ", claims.UserId)
+		if err != nil {
+			WriteJSON(w, http.StatusUnauthorized, err.Error())
+			return
+		}
+		f(w, r)
+	}
+
+}
+
+func (s *APIServer) handleGetAllUsers(w http.ResponseWriter, r *http.Request) error {
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return fmt.Errorf("method not allowed %s", r.Method)
+	}
+	//TODO: Exclude password hash from response
+	users, err := s.store.GetAllUsers()
+	if err != nil {
+		return err
+	}
+	err = WriteJSON(w, http.StatusOK, users)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func WriteJSON(w http.ResponseWriter, status int, v any) error {

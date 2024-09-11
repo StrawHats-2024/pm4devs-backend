@@ -7,6 +7,9 @@ db-down:
 build:
 	go build -o bin/pm4devs-backend
 
+dev:
+	air
+
 run: build
 	./bin/pm4devs-backend
 
