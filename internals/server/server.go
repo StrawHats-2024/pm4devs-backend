@@ -25,13 +25,17 @@ func NewAPIServer(listenAddr string, store db.Storage) *APIServer {
 func (s *APIServer) Run() {
 	router := mux.NewRouter()
 
-	router.HandleFunc("/auth/register", makeHTTPHandleFunc(s.handleRegister))
-	router.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
 		WriteJSON(w, http.StatusOK, "working fine")
 	})
+
+	router.HandleFunc("/auth/register", makeHTTPHandleFunc(s.handleRegister))
 	router.HandleFunc("/auth/login", makeHTTPHandleFunc(s.handleLogin))
 	router.HandleFunc("/auth/logout", makeHTTPHandleFunc(s.handleLogout))
 	router.HandleFunc("/auth/refresh", makeHTTPHandleFunc(s.handleTokenRefresh))
+
+  router.HandleFunc("/secrets", makeHTTPHandleFunc(s.handleSecretsManagement))
+
 	router.HandleFunc("/get/users", withAuth(makeHTTPHandleFunc(s.handleGetAllUsers)))
 	//
 	log.Println("JSON API server running on port: ", s.listenAddr)
@@ -63,6 +67,15 @@ func withAuth(f http.HandlerFunc) http.HandlerFunc {
 		f(w, r)
 	}
 
+}
+
+func (s *APIServer) handleSecretsManagement(w http.ResponseWriter, r *http.Request) error {
+  // TODO: Impliment Create secret POST
+  // TODO: Impliment Get all secret GET:
+  // TODO: Impliment Get One secret by ID GET:
+  // TODO: Impliment update One secret by ID GET:
+  // TODO: Impliment Delete one secret by ID DEL:
+  return nil
 }
 
 func (s *APIServer) handleGetAllUsers(w http.ResponseWriter, r *http.Request) error {

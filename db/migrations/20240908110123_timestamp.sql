@@ -17,7 +17,7 @@ CREATE TABLE Secret (
     encrypted_data TEXT NOT NULL,
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- You will need a trigger to update this automatically
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
 );
 
 CREATE TABLE Groups (

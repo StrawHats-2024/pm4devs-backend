@@ -15,6 +15,12 @@ type Storage interface {
 	GetUserByEmail(string) (*models.User, error)
 	GetAllUsers() ([]*models.User, error)
 	UpdateLastLogin(int) error
+
+	CreateSecret(*models.Secret) (int, error)
+	GetAllSecret() ([]*models.Secret, error)
+	GetSecretById(int) (*models.Secret, error)
+	GetAllSecretsByUserID(int) ([]*models.Secret, error)
+	DeleteSecretById(int) error
 }
 
 type PostgresStore struct {
