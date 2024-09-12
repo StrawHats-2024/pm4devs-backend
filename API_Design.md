@@ -79,6 +79,7 @@
 - **Request**:
   ```json
   {
+    "user_id": 1,
     "secret_type": "password", // or 'ssh_key', 'api_key'
     "encrypted_data": "encrypted_secret_here",
     "description": "My database password"

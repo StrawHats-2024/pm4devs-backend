@@ -35,6 +35,7 @@ func (s *APIServer) Run() {
 	router.HandleFunc("/auth/refresh", makeHTTPHandleFunc(s.handleTokenRefresh))
 
   router.HandleFunc("/secrets", makeHTTPHandleFunc(s.handleSecretsManagement))
+  router.HandleFunc("/secrets/{secret_id}", makeHTTPHandleFunc(s.handleSecretsManagementById))
 
 	router.HandleFunc("/get/users", withAuth(makeHTTPHandleFunc(s.handleGetAllUsers)))
 	//
@@ -43,47 +44,11 @@ func (s *APIServer) Run() {
 	http.ListenAndServe(s.listenAddr, router)
 }
 
-func withAuth(f http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("token")
-		if err != nil {
-			if err == http.ErrNoCookie {
-				// If the token is missing, return an unauthorized status
-				http.Error(w, "Missing token", http.StatusUnauthorized)
-				return
-			}
-			// For any other error, return a bad request status
-			http.Error(w, "Bad request", http.StatusBadRequest)
-			return
-		}
-
-		tokenString := cookie.Value
-		claims, err := validateToken(tokenString)
-		fmt.Println("claims: ", claims.UserId)
-		if err != nil {
-			WriteJSON(w, http.StatusUnauthorized, err.Error())
-			return
-		}
-		f(w, r)
-	}
-
-}
-
-func (s *APIServer) handleSecretsManagement(w http.ResponseWriter, r *http.Request) error {
-  // TODO: Impliment Create secret POST
-  // TODO: Impliment Get all secret GET:
-  // TODO: Impliment Get One secret by ID GET:
-  // TODO: Impliment update One secret by ID GET:
-  // TODO: Impliment Delete one secret by ID DEL:
-  return nil
-}
-
 func (s *APIServer) handleGetAllUsers(w http.ResponseWriter, r *http.Request) error {
 	if r.Method != "GET" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return fmt.Errorf("method not allowed %s", r.Method)
 	}
-	//TODO: Exclude password hash from response
 	users, err := s.store.GetAllUsers()
 	if err != nil {
 		return err

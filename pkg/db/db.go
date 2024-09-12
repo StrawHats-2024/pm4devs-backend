@@ -13,7 +13,7 @@ type Storage interface {
 	CreateUser(*models.User) (int, error)
 	GetUserById(int) (*models.User, error)
 	GetUserByEmail(string) (*models.User, error)
-	GetAllUsers() ([]*models.User, error)
+	GetAllUsers() ([]*models.User, error) // passwordHash will be set empty
 	UpdateLastLogin(int) error
 
 	CreateSecret(*models.Secret) (int, error)
@@ -21,6 +21,7 @@ type Storage interface {
 	GetSecretById(int) (*models.Secret, error)
 	GetAllSecretsByUserID(int) ([]*models.Secret, error)
 	DeleteSecretById(int) error
+  UpdateSecretById(int, UpdateSecretReq) error
 }
 
 type PostgresStore struct {

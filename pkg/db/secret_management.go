@@ -1,7 +1,9 @@
 package db
 
 import (
+	"fmt"
 	"pm4devs-backend/pkg/models"
+	"time"
 )
 
 func (pg *PostgresStore) CreateSecret(secret *models.Secret) (int, error) {
@@ -110,9 +112,45 @@ func (pg *PostgresStore) DeleteSecretById(secretId int) error {
   WHERE secret_id = $1; 
   `
 
-	_, err := pg.db.Exec(query, secretId)
+	result, err := pg.db.Exec(query, secretId)
 	if err != nil {
 		return err
 	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("secret with ID %d not found", secretId)
+	}
+	return nil
+}
+
+type UpdateSecretReq struct {
+	EncryptedData string `json:"encrypted_data" db:"encrypted_data"`
+	Description   string `json:"description" db:"description"`
+}
+
+func (pg *PostgresStore) UpdateSecretById(secretId int, data UpdateSecretReq) error {
+	query := `
+    UPDATE Secret
+    SET encrypted_data = $1, description = $2, updated_at = $3
+    WHERE secret_id = $4;
+  `
+	result, err := pg.db.Exec(query, data.EncryptedData, data.Description, time.Now(), secretId)
+	if err != nil {
+		return err
+	}
+
+	// Check how many rows were affected
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("secret with ID %d not found", secretId)
+	}
+
 	return nil
 }

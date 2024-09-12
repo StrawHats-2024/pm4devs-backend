@@ -6,6 +6,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type SecretType string
+
+const (
+	SSHKey   SecretType = "ssh_key"
+	Password SecretType = "password"
+	APIKey   SecretType = "api_key"
+)
+
 type User struct {
 	UserID       int       `json:"user_id" db:"user_id"`
 	Email        string    `json:"email" db:"email"`
@@ -20,13 +28,13 @@ func (u *User) ValidPassword(pw string) bool {
 }
 
 type Secret struct {
-	SecretID      int       `json:"secret_id" db:"secret_id"`
-	UserID        int       `json:"user_id" db:"user_id"`
-	SecretType    string    `json:"secret_type" db:"secret_type"`
-	EncryptedData string    `json:"encrypted_data" db:"encrypted_data"`
-	Description   string    `json:"description" db:"description"`
-	CreatedAt     time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
+	SecretID      int        `json:"secret_id" db:"secret_id"`
+	UserID        int        `json:"user_id" db:"user_id"`
+	SecretType    SecretType `json:"secret_type" db:"secret_type"`
+	EncryptedData string     `json:"encrypted_data" db:"encrypted_data"`
+	Description   string     `json:"description" db:"description"`
+	CreatedAt     time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at" db:"updated_at"`
 }
 
 type Group struct {

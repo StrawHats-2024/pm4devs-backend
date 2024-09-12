@@ -29,6 +29,7 @@ func (pg *PostgresStore) CreateUser(user *models.User) (int, error) {
 	fmt.Println("New User ID: ", user.UserID)
 	return userId, nil
 }
+
 func (pg *PostgresStore) GetUserById(id int) (*models.User, error) {
 	query := `
   SELECT (user_id, email, username, password_hash, created_at, last_login)
@@ -108,6 +109,7 @@ func (pg *PostgresStore) GetUserByEmail(email string) (*models.User, error) {
 
 	return user, nil
 }
+
 func (pg *PostgresStore) UpdateLastLogin(userID int) error {
 	query := `
     UPDATE Users

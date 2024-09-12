@@ -77,6 +77,32 @@ func (s *APIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
 
 }
 
+func withAuth(f http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("token")
+		if err != nil {
+			if err == http.ErrNoCookie {
+				// If the token is missing, return an unauthorized status
+				http.Error(w, "Missing token", http.StatusUnauthorized)
+				return
+			}
+			// For any other error, return a bad request status
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+
+		tokenString := cookie.Value
+		claims, err := validateToken(tokenString)
+		fmt.Println("claims: ", claims.UserId)
+		if err != nil {
+			WriteJSON(w, http.StatusUnauthorized, err.Error())
+			return
+		}
+		f(w, r)
+	}
+
+}
+
 func (s *APIServer) handleRegister(w http.ResponseWriter, r *http.Request) error {
 	if r.Method != "POST" {
 		w.WriteHeader(http.StatusMethodNotAllowed)
