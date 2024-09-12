@@ -13,8 +13,15 @@ import (
 )
 
 func (s *APIServer) handleSecretsManagement(w http.ResponseWriter, r *http.Request) error {
+	userIdFromCookie, err := getUserIdfromCookie(r)
+	fmt.Println("userIdFromCookie: ", userIdFromCookie)
+	if err != nil {
+		return err
+	}
+
 	switch r.Method {
 	case http.MethodGet:
+		//TODO: Deal with permissions
 		secrets, err := s.store.GetAllSecret()
 		if err != nil {
 			return err
@@ -23,12 +30,18 @@ func (s *APIServer) handleSecretsManagement(w http.ResponseWriter, r *http.Reque
 		return nil
 
 	case http.MethodPost:
+		// only add with your own userid
 		var secret *models.Secret
 		err := json.NewDecoder(r.Body).Decode(&secret)
 		if err != nil {
 			return err
 		}
 		secret.CreatedAt = time.Now()
+		if secret.UserID != userIdFromCookie {
+			err := WriteJSON(w, http.StatusUnauthorized,
+				ApiError{Error: "Only allowed create secret with your user_id"})
+			return err
+		}
 		secreId, err := s.store.CreateSecret(secret)
 		if err != nil {
 			return err
@@ -43,6 +56,7 @@ func (s *APIServer) handleSecretsManagement(w http.ResponseWriter, r *http.Reque
 		fmt.Println("created secreId: ", secreId)
 		err = WriteJSON(w, http.StatusOK, response)
 		return err
+
 	default:
 		return fmt.Errorf("method not allowed %s", r.Method)
 
@@ -58,29 +72,55 @@ func (s *APIServer) handleSecretsManagementById(w http.ResponseWriter, r *http.R
 		return err
 	}
 
+	userId, err := getUserIdfromCookie(r)
+	if err != nil {
+		return err
+	}
+
 	switch r.Method {
 	case http.MethodGet:
+		// only owner can get
 		secret, err := s.store.GetSecretById(secretId)
 		if err != nil {
 			return err
 		}
-		err = WriteJSON(w, http.StatusOK, secret)
-		return err
+		if secret.UserID != userId {
+			return WriteJSON(w, http.StatusUnauthorized,
+				ApiError{Error: "Unauthorized access: You do not have permission to view this secret."})
+		}
+		return WriteJSON(w, http.StatusOK, secret)
 
 	case http.MethodDelete:
-		err := s.store.DeleteSecretById(secretId)
+		// only owner can delete
+		secret, err := s.store.GetSecretById(secretId)
 		if err != nil {
 			return err
 		}
-		err = WriteJSON(w, http.StatusOK,
+		if secret.UserID != userId {
+			return WriteJSON(w, http.StatusUnauthorized,
+				ApiError{Error: "Unauthorized access: You do not have permission to delete this secret."})
+		}
+		err = s.store.DeleteSecretById(secretId)
+		if err != nil {
+			return err
+		}
+		return WriteJSON(w, http.StatusOK,
 			struct {
 				Message string `json:"message"`
 			}{Message: "Secret deleted successfully"})
-		return err
 
 	case http.MethodPut:
+		// only owner can update
+		secret, err := s.store.GetSecretById(secretId)
+		if err != nil {
+			return err
+		}
+		if secret.UserID != userId {
+			return WriteJSON(w, http.StatusUnauthorized,
+				ApiError{Error: "Unauthorized access: You do not have permission to update this secret."})
+		}
 		var reqObj db.UpdateSecretReq
-		err := json.NewDecoder(r.Body).Decode(&reqObj)
+		err = json.NewDecoder(r.Body).Decode(&reqObj)
 		if err != nil {
 			return err
 		}
@@ -88,12 +128,10 @@ func (s *APIServer) handleSecretsManagementById(w http.ResponseWriter, r *http.R
 		if err != nil {
 			return err
 		}
-		err = WriteJSON(w, http.StatusOK,
+		return WriteJSON(w, http.StatusOK,
 			struct {
 				Message string `json:"message"`
 			}{Message: "Secret updated successfully"})
-
-		return err
 
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)

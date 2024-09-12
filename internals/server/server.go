@@ -31,11 +31,11 @@ func (s *APIServer) Run() {
 
 	router.HandleFunc("/auth/register", makeHTTPHandleFunc(s.handleRegister))
 	router.HandleFunc("/auth/login", makeHTTPHandleFunc(s.handleLogin))
-	router.HandleFunc("/auth/logout", makeHTTPHandleFunc(s.handleLogout))
+	router.HandleFunc("/auth/logout", withAuth(makeHTTPHandleFunc(s.handleLogout)))
 	router.HandleFunc("/auth/refresh", makeHTTPHandleFunc(s.handleTokenRefresh))
 
-  router.HandleFunc("/secrets", makeHTTPHandleFunc(s.handleSecretsManagement))
-  router.HandleFunc("/secrets/{secret_id}", makeHTTPHandleFunc(s.handleSecretsManagementById))
+	router.HandleFunc("/secrets", withAuth(makeHTTPHandleFunc(s.handleSecretsManagement)))
+	router.HandleFunc("/secrets/{secret_id}", withAuth(makeHTTPHandleFunc(s.handleSecretsManagementById)))
 
 	router.HandleFunc("/get/users", withAuth(makeHTTPHandleFunc(s.handleGetAllUsers)))
 	//
