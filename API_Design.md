@@ -273,8 +273,71 @@
     }
   ]
   ```
+  #### 14. **Update Group Name**
+- **Endpoint**: `/groups{group_id}`
+- **Method**: `PUT`
+- **Description**: Update the name of a specified group.
+- **Authorization**: Admin role in the group is required (user ID taken from JWT).
+- **Request Body**:
+  ```json
+  {
+    "new_group_name": "New Group Name",
+  }
+  ```
+- **Response**:
+  - `200 OK`: Successfully updated group name.
+  ```json
+  {
+    "message": "Group name updated successfully."
+  }
+  ```
 
-#### 14. **Add User to Group**
+#### 15. **Delete Group**
+- **Endpoint**: `/groups/{group_id}`
+- **Method**: `DELETE`
+- **Description**: Delete a specified group.
+- **Authorization**: Creator of the group is required (JWT authentication).
+- **Response**:
+  - `200 OK`: Successfully deleted group.
+  ```json
+  {
+    "message": "Group deleted successfully."
+  }
+  ```
+
+#### 16. **Get Group by ID**
+- **Endpoint**: `/groups/{group_id}`
+- **Method**: `GET`
+- **Description**: Retrieve details of a specific group by its ID.
+- **Authorization**: User must be a member of the group.
+- **Response**:
+  - `200 OK`: Successfully retrieved group details.
+  ```json
+  {
+    "group": {
+      "group_id": 4,
+      "group_name": "testing rename",
+      "created_by": 4,
+      "created_at": "0001-01-01T00:00:00Z"
+    },
+    "users": [
+      {
+        "user_id": 1,
+        "email": "user1@example.com",
+        "username": "user1",
+        "role": "member"
+      },
+      {
+        "user_id": 4,
+        "email": "palegar.parikshith4@gmail.com",
+        "username": "paroi",
+        "role": "admin"
+      }
+    ]
+  }
+  ```
+
+#### 17. **Add User to Group**
 - **Endpoint**: `/groups/{group_id}/add_user`
 - **Method**: `POST`
 - **Description**: Add a user to a group.
@@ -295,7 +358,7 @@
   ```
   - `404 Not Found`: User or group not found.
 
-#### 15. **Remove User from Group**
+#### 18. **Remove User from Group**
 - **Endpoint**: `/groups/{group_id}/remove_user`
 - **Method**: `DELETE`
 - **Description**: Remove a user from a group.
@@ -303,7 +366,7 @@
 - **Request**:
   ```json
   {
-    "user_id": "567"
+    "user_email": "newuser@example.com"
   }
   ```
 - **Response**:
@@ -318,7 +381,7 @@
 
 ### **Audit Logging**
 
-#### 16. **Get Audit Logs**
+#### 19. **Get Audit Logs**
 - **Endpoint**: `/audit/logs`
 - **Method**: `GET`
 - **Description**: Retrieve all actions performed by the user for audit purposes, including secret access, updates, and group management activities.
@@ -342,7 +405,7 @@
   ]
   ```
 
-#### 17. **Get Audit Logs for a Secret**
+#### 20. **Get Audit Logs for a Secret**
 - **Endpoint**: `/audit/logs/secret/{secret_id}`
 - **Method**: `GET`
 - **Description**: Retrieve all actions performed on a specific secret.
@@ -366,7 +429,7 @@
 
 The CLI can be built to interact with the API. Below are examples of commands that align with the API:
 
-#### 18. **Get Secret via CLI**
+#### 21. **Get Secret via CLI**
 - **Command**: 
   ```bash
   passwordmanager-cli get secret --secret_id=5678
@@ -375,7 +438,7 @@ The CLI can be built to interact with the API. Below are examples of commands th
 - **Response**:
   - Prints the decrypted secret in the terminal after user authentication via JWT token.
   
-#### 19. **Set Secret via CLI**
+#### 22. **Set Secret via CLI**
 - **Command**:
   ```bash
   passwordmanager-cli set secret --secret_type=password --description="My DB password"
@@ -384,7 +447,7 @@ The CLI can be built to interact with the API. Below are examples of commands th
 - **Response**:
   - Returns the secret ID and a success message.
 
-#### 20. **Search Secret via CLI**
+#### 23. **Search Secret via CLI**
 - **Command**:
   ```bash
   passwordmanager-cli search secret --query="database"

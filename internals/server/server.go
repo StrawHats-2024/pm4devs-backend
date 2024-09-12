@@ -34,8 +34,19 @@ func (s *APIServer) Run() {
 	router.HandleFunc("/auth/logout", withAuth(makeHTTPHandleFunc(s.handleLogout)))
 	router.HandleFunc("/auth/refresh", makeHTTPHandleFunc(s.handleTokenRefresh))
 
-	router.HandleFunc("/secrets", withAuth(makeHTTPHandleFunc(s.handleSecretsManagement)))
-	router.HandleFunc("/secrets/{secret_id}", withAuth(makeHTTPHandleFunc(s.handleSecretsManagementById)))
+	router.HandleFunc("/secrets",
+		withAuth(makeHTTPHandleFunc(s.handleSecretsManagement)))
+	router.HandleFunc("/secrets/{secret_id}",
+		withAuth(makeHTTPHandleFunc(s.handleSecretsManagementById)))
+
+	router.HandleFunc("/groups",
+		withAuth(makeHTTPHandleFunc(s.handleGroupManagement)))
+	router.HandleFunc("/groups/{group_id}/add_user",
+		withAuth(makeHTTPHandleFunc(s.handleAddUser))).Methods(http.MethodPost)
+	router.HandleFunc("/groups/{group_id}",
+		withAuth(makeHTTPHandleFunc(s.handleGroupManagementWithId))).Methods(http.MethodGet, http.MethodDelete, http.MethodPut)
+	router.HandleFunc("/groups/{group_id}/remove_user",
+		withAuth(makeHTTPHandleFunc(s.handleRemoveUser))).Methods(http.MethodDelete)
 
 	router.HandleFunc("/get/users", withAuth(makeHTTPHandleFunc(s.handleGetAllUsers)))
 	//

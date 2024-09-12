@@ -32,7 +32,7 @@ func TestGetGroupsOfUser(t *testing.T) {
 	pg := &PostgresStore{db: db}
 
 	// Assume user ID 1 exists and has groups
-	groups, err := pg.GetGroupsOfUser(1)
+	groups, err := pg.GetUserGroups(1)
 	if err != nil {
 		t.Fatalf("Failed to get groups for user: %v", err)
 	}
@@ -49,10 +49,10 @@ func TestAddUserToGroup(t *testing.T) {
 	pg := &PostgresStore{db: db}
 	newUser := AddUserToGroupReq{
 		UserEmail: "user1@example.com",
-		Role:      models.Member,      
+		Role:      models.Member,
 	}
 
-	err := pg.AddUserToGroup(1, newUser) 
+	err := pg.AddUserToGroup(1, newUser)
 	if err != nil {
 		t.Fatalf("Failed to add user to group: %v", err)
 	}
@@ -76,7 +76,7 @@ func TestGetAllUsersByGroupID(t *testing.T) {
 
 	pg := &PostgresStore{db: db}
 
-	users, err := pg.GetAllUsersByGroupID(1) // Assume group ID 1 exists
+	users, err := pg.GetUsersByGroupId(1) // Assume group ID 1 exists
 	if err != nil {
 		t.Fatalf("Failed to get users for group: %v", err)
 	}
