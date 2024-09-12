@@ -44,11 +44,18 @@ type Group struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
 
+type Role string // member or admin
+
+const (
+	Member Role = "member"
+	Admin  Role = "admin"
+)
+
 type UserGroup struct {
-	UserGroupID int    `json:"user_group_id" db:"user_group_id"`
-	UserID      int    `json:"user_id" db:"user_id"`
-	GroupID     int    `json:"group_id" db:"group_id"`
-	Role        string `json:"role" db:"role"`
+	UserGroupID int  `json:"user_group_id" db:"user_group_id"`
+	UserID      int  `json:"user_id" db:"user_id"`
+	GroupID     int  `json:"group_id" db:"group_id"`
+	Role        Role `json:"role" db:"role"`
 }
 
 type SharedSecret struct {

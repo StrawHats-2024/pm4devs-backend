@@ -21,7 +21,13 @@ type Storage interface {
 	GetSecretById(int) (*models.Secret, error)
 	GetAllSecretsByUserID(int) ([]*models.Secret, error)
 	DeleteSecretById(int) error
-  UpdateSecretById(int, UpdateSecretReq) error
+	UpdateSecretById(int, UpdateSecretReq) error
+
+	CreateGroup(*models.Group) (int, error)
+	GetGroupsOfUser(int) ([]*GetUserGroupByIdRes, error)
+	AddUserToGroup(int, AddUserToGroupReq) error
+	DeleteUserFromGroup(int, string) error
+	GetAllUsersByGroupID(int) ([]UserRes, error)
 }
 
 type PostgresStore struct {
