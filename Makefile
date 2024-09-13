@@ -5,10 +5,10 @@ db-down:
 	docker compose down
 
 build:
-	go build -o bin/pm4devs-backend
+	go build -o bin/pm4devs-backend cmd/main.go
 
 dev:
-	air
+	air --build.cmd "go build -o bin/pm4devs-backend cmd/main.go" --build.bin "./bin/pm4devs-backend"
 
 run: build
 	./bin/pm4devs-backend

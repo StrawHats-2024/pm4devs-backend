@@ -233,11 +233,53 @@
   ]
   ```
 
+  #### 11. **Revoke Access from User**
+- **Endpoint**: `/secrets/{secret_id}/revoke`
+- **Method**: `POST`
+- **Description**: Revoke access to a secret from a specified user.
+- **Authorization**: JWT token required.
+- **Request**:
+  ```json
+  {
+    "user_email": "otheruser@example.com"
+  }
+  ```
+- **Response**:
+  - `200 OK`: Access revoked successfully.
+  ```json
+  {
+    "message": "Access revoked successfully."
+  }
+  ```
+  - `404 Not Found`: User not found or does not have access to the secret.
+
+#### 12. **Revoke Access from Group**
+- **Endpoint**: `/secrets/{secret_id}/revoke/group`
+- **Method**: `POST`
+- **Description**: Revoke access to a secret from a specified group.
+- **Authorization**: JWT token required.
+- **Request**:
+  ```json
+  {
+    "group_id": "123"
+  }
+  ```
+- **Response**:
+  - `200 OK`: Access revoked from group successfully.
+  ```json
+  {
+    "message": "Access revoked from group successfully."
+  }
+  ```
+  - `404 Not Found`: Group not found or user not part of the group.
+
+
+
 ---
 
 ### **Group Management**
 
-#### 12. **Create Group**
+#### 13. **Create Group**
 - **Endpoint**: `/groups`
 - **Method**: `POST`
 - **Description**: Create a new group.
@@ -257,7 +299,7 @@
   }
   ```
 
-#### 13. **Get User Groups**
+#### 14. **Get User Groups**
 - **Endpoint**: `/groups`
 - **Method**: `GET`
 - **Description**: Retrieve all groups the authenticated user is part of.
@@ -273,7 +315,7 @@
     }
   ]
   ```
-  #### 14. **Update Group Name**
+  #### 15. **Update Group Name**
 - **Endpoint**: `/groups{group_id}`
 - **Method**: `PUT`
 - **Description**: Update the name of a specified group.
@@ -292,7 +334,7 @@
   }
   ```
 
-#### 15. **Delete Group**
+#### 16. **Delete Group**
 - **Endpoint**: `/groups/{group_id}`
 - **Method**: `DELETE`
 - **Description**: Delete a specified group.
@@ -305,7 +347,7 @@
   }
   ```
 
-#### 16. **Get Group by ID**
+#### 17. **Get Group by ID**
 - **Endpoint**: `/groups/{group_id}`
 - **Method**: `GET`
 - **Description**: Retrieve details of a specific group by its ID.
@@ -337,7 +379,7 @@
   }
   ```
 
-#### 17. **Add User to Group**
+#### 18. **Add User to Group**
 - **Endpoint**: `/groups/{group_id}/add_user`
 - **Method**: `POST`
 - **Description**: Add a user to a group.
@@ -358,7 +400,7 @@
   ```
   - `404 Not Found`: User or group not found.
 
-#### 18. **Remove User from Group**
+#### 19. **Remove User from Group**
 - **Endpoint**: `/groups/{group_id}/remove_user`
 - **Method**: `DELETE`
 - **Description**: Remove a user from a group.
@@ -381,7 +423,7 @@
 
 ### **Audit Logging**
 
-#### 19. **Get Audit Logs**
+#### 20. **Get Audit Logs**
 - **Endpoint**: `/audit/logs`
 - **Method**: `GET`
 - **Description**: Retrieve all actions performed by the user for audit purposes, including secret access, updates, and group management activities.
@@ -405,7 +447,7 @@
   ]
   ```
 
-#### 20. **Get Audit Logs for a Secret**
+#### 21. **Get Audit Logs for a Secret**
 - **Endpoint**: `/audit/logs/secret/{secret_id}`
 - **Method**: `GET`
 - **Description**: Retrieve all actions performed on a specific secret.
@@ -429,7 +471,7 @@
 
 The CLI can be built to interact with the API. Below are examples of commands that align with the API:
 
-#### 21. **Get Secret via CLI**
+#### 22. **Get Secret via CLI**
 - **Command**: 
   ```bash
   passwordmanager-cli get secret --secret_id=5678
@@ -438,7 +480,7 @@ The CLI can be built to interact with the API. Below are examples of commands th
 - **Response**:
   - Prints the decrypted secret in the terminal after user authentication via JWT token.
   
-#### 22. **Set Secret via CLI**
+#### 23. **Set Secret via CLI**
 - **Command**:
   ```bash
   passwordmanager-cli set secret --secret_type=password --description="My DB password"
@@ -447,7 +489,7 @@ The CLI can be built to interact with the API. Below are examples of commands th
 - **Response**:
   - Returns the secret ID and a success message.
 
-#### 23. **Search Secret via CLI**
+#### 24. **Search Secret via CLI**
 - **Command**:
   ```bash
   passwordmanager-cli search secret --query="database"

@@ -1,52 +1,45 @@
-package db
+package types
 
-import (
-	"database/sql"
-	"log"
-	"os"
-	"pm4devs-backend/pkg/models"
-
-	_ "github.com/lib/pq"
-)
-
-// Storage defines the interface for data storage operations related to users, secrets, and groups.
-type Storage interface {
-	// CreateUser creates a new user in the database and returns the user's ID.
-	CreateUser(*models.User) (int, error)
+type UserStore interface {
+	CreateUser(*User) (int, error)
 
 	// GetUserById retrieves a user by their ID.
-	GetUserById(int) (*models.User, error)
+	GetUserById(int) (*User, error)
 
 	// GetUserByEmail retrieves a user by their email address.
-	GetUserByEmail(string) (*models.User, error)
+	GetUserByEmail(string) (*User, error)
 
 	// GetAllUsers retrieves all users from the database.
 	// The passwordHash for each user will be set to an empty string for security.
-	GetAllUsers() ([]*models.User, error)
+	GetAllUsers() ([]*User, error)
 
 	// UpdateLastLogin updates the last login timestamp for a user identified by their ID.
 	UpdateLastLogin(int) error
+}
 
+type SecretStore interface {
 	// CreateSecret creates a new secret and returns its ID.
-	CreateSecret(*models.Secret) (int, error)
+	CreateSecret(*Secret) (int, error)
 
 	// GetAllSecret retrieves all secrets from the database.
-	GetAllSecret() ([]*models.Secret, error)
+	GetAllSecret() ([]*Secret, error)
 
 	// GetSecretById retrieves a secret by its ID.
-	GetSecretById(int) (*models.Secret, error)
+	GetSecretById(int) (*Secret, error)
 
 	// GetAllSecretsByUserID retrieves all secrets associated with a user identified by their ID.
-	GetAllSecretsByUserID(int) ([]*models.Secret, error)
+	GetAllSecretsByUserID(int) ([]*Secret, error)
 
 	// DeleteSecretById deletes a secret identified by its ID from the database.
 	DeleteSecretById(int) error
 
 	// UpdateSecretById updates a secret identified by its ID using the provided request data.
-	UpdateSecretById(int, UpdateSecretReq) error
+	UpdateSecretById(int, UpdateSecretPayload) error
+}
 
+type GroupStore interface {
 	// CreateGroup creates a new group and returns the group's ID.
-	CreateGroup(*models.Group) (int, error)
+	CreateGroup(*Group) (int, error)
 
 	// GetUserGroups retrieves a list of groups that a user belongs to, identified by their user ID.
 	GetUserGroups(userId int) ([]*GetUserGroupRes, error) // Returns list of groups user belongs to
@@ -55,13 +48,13 @@ type Storage interface {
 	GetGroupById(groupId int) (*GroupWithUsers, error)
 
 	// AddUserToGroup adds a user to a specified group.
-	AddUserToGroup(groupId int, newUser AddUserToGroupReq) error
+	AddUserToGroup(groupId int, newUser AddUserToGroupPayload) error
 
 	// DeleteUserFromGroup removes a user from a specified group using their email address.
 	DeleteUserFromGroup(groupId int, email string) error
 
 	// GetUsersByGroupId retrieves all users belonging to a group identified by its ID.
-	GetUsersByGroupId(groupId int) ([]UserRes, error) // Returns all users of the group with groupId
+	GetUsersByGroupId(groupId int) ([]UserInGroup, error) // Returns all users of the group with groupId
 
 	// DeleteGroup deletes a group identified by its ID from the database.
 	DeleteGroup(groupId int) error // groupId to delete group
@@ -76,27 +69,6 @@ type Storage interface {
 	IsGroupCreator(userId, groupId int) (bool, error)
 
 	// Get user role with user_email and groupId
-	GetUserRoleInGroup(string, int) (models.Role, error)
-}
-type PostgresStore struct {
-	db *sql.DB
+	GetUserRoleInGroup(string, int) (Role, error)
 }
 
-func NewPostgresStore() (*PostgresStore, error) {
-	connStr := os.Getenv("DATABASE_URL")
-	if connStr == "" {
-		log.Fatal("Database URL not found in env")
-	}
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := db.Ping(); err != nil {
-		return nil, err
-	}
-
-	return &PostgresStore{
-		db: db,
-	}, nil
-}

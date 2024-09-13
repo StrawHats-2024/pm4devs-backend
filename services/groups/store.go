@@ -1,12 +1,20 @@
-package db
+package groups
 
 import (
 	"database/sql"
 	"fmt"
-	"pm4devs-backend/pkg/models"
+	"pm4devs-backend/types"
 )
 
-func (pg *PostgresStore) UpdateGroupName(groupId int, newName string) error {
+type Store struct {
+	db *sql.DB
+}
+
+func NewStore(db *sql.DB) *Store {
+	return &Store{db: db}
+}
+
+func (pg *Store) UpdateGroupName(groupId int, newName string) error {
 	// Prepare the SQL query to update the group name
 	query := `
 		UPDATE Groups
@@ -23,7 +31,7 @@ func (pg *PostgresStore) UpdateGroupName(groupId int, newName string) error {
 	return nil
 }
 
-func (pg *PostgresStore) DeleteGroup(groupID int) error {
+func (pg *Store) DeleteGroup(groupID int) error {
 	query := `DELETE FROM Groups WHERE group_id = $1;`
 	result, err := pg.db.Exec(query, groupID)
 	if err != nil {
@@ -41,7 +49,7 @@ func (pg *PostgresStore) DeleteGroup(groupID int) error {
 	return nil
 }
 
-func (pg *PostgresStore) CreateGroup(group *models.Group) (int, error) {
+func (pg *Store) CreateGroup(group *types.Group) (int, error) {
 	// Start a transaction
 	tx, err := pg.db.Begin()
 	if err != nil {
@@ -65,7 +73,7 @@ func (pg *PostgresStore) CreateGroup(group *models.Group) (int, error) {
 		INSERT INTO UserGroup (user_id, group_id, role) 
 		VALUES ($1, $2, $3);`
 
-	_, err = tx.Exec(query, group.CreatedBy, groupId, models.Admin)
+	_, err = tx.Exec(query, group.CreatedBy, groupId, types.Admin)
 	if err != nil {
 		return -1, err
 	}
@@ -78,8 +86,8 @@ func (pg *PostgresStore) CreateGroup(group *models.Group) (int, error) {
 	return groupId, nil
 }
 
-func (pg *PostgresStore) GetUserGroups(userId int) (
-	[]*GetUserGroupRes, error,
+func (pg *Store) GetUserGroups(userId int) (
+	[]*types.GetUserGroupRes, error,
 ) { // returns all groups that the user with the given userId belongs to
 	query := `
     SELECT 
@@ -99,9 +107,9 @@ func (pg *PostgresStore) GetUserGroups(userId int) (
 	}
 	defer rows.Close()
 
-	var groups []*GetUserGroupRes
+	var groups []*types.GetUserGroupRes
 	for rows.Next() {
-		var group GetUserGroupRes
+		var group types.GetUserGroupRes
 		if err := rows.Scan(&group.GroupID, &group.GroupName, &group.Role); err != nil {
 			return nil, err
 		}
@@ -111,7 +119,37 @@ func (pg *PostgresStore) GetUserGroups(userId int) (
 	return groups, nil
 }
 
-func (pg *PostgresStore) AddUserToGroup(group_id int, newUser AddUserToGroupReq) error {
+func (pg *Store) GetUserByEmail(email string) (*types.User, error) {
+	query := `
+  SELECT *
+  FROM Users
+  WHERE email = $1;
+  `
+	// Initialize a User struct to hold the result
+	user := new(types.User)
+
+	// Use QueryRow to fetch the single row based on email
+	err := pg.db.QueryRow(query, email).Scan(
+		&user.UserID,
+		&user.Email,
+		&user.Username,
+		&user.PasswordHash,
+		&user.CreatedAt,
+		&user.LastLogin,
+	)
+
+	// Handle the case where no row is found
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("user with email %s not found", email)
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (pg *Store) AddUserToGroup(groupId int, newUser types.AddUserToGroupPayload) error {
 	user, err := pg.GetUserByEmail(newUser.UserEmail)
 	if err != nil {
 		return err
@@ -120,7 +158,7 @@ func (pg *PostgresStore) AddUserToGroup(group_id int, newUser AddUserToGroupReq)
     INSERT INTO UserGroup (user_id, group_id, role) 
     VALUES ($1, $2, $3);`
 
-	_, err = pg.db.Exec(query, user.UserID, group_id, newUser.Role)
+	_, err = pg.db.Exec(query, user.UserID, groupId, newUser.Role)
 	if err != nil {
 		return err
 	}
@@ -128,7 +166,7 @@ func (pg *PostgresStore) AddUserToGroup(group_id int, newUser AddUserToGroupReq)
 	return nil
 }
 
-func (pg *PostgresStore) DeleteUserFromGroup(groupID int, userEmail string) error {
+func (pg *Store) DeleteUserFromGroup(groupID int, userEmail string) error {
 	// Retrieve the user by their email
 	fmt.Println("Entered the delet user func")
 	user, err := pg.GetUserByEmail(userEmail)
@@ -162,7 +200,7 @@ func (pg *PostgresStore) DeleteUserFromGroup(groupID int, userEmail string) erro
 }
 
 // gets list of users belonging to the group with the specified groupID
-func (pg *PostgresStore) GetUsersByGroupId(groupID int) ([]UserRes, error) {
+func (pg *Store) GetUsersByGroupId(groupID int) ([]types.UserInGroup, error) {
 	query := `
 		SELECT u.user_id, u.username
 		FROM UserGroup ug
@@ -175,9 +213,9 @@ func (pg *PostgresStore) GetUsersByGroupId(groupID int) ([]UserRes, error) {
 	}
 	defer rows.Close()
 
-	var users []UserRes
+	var users []types.UserInGroup
 	for rows.Next() {
-		var user UserRes
+		var user types.UserInGroup
 		if err := rows.Scan(&user.UserID, &user.Username); err != nil {
 			return nil, err
 		}
@@ -191,25 +229,14 @@ func (pg *PostgresStore) GetUsersByGroupId(groupID int) ([]UserRes, error) {
 	return users, nil
 }
 
-type GroupWithUsers struct {
-	Group models.Group    `json:"group"`
-	Users []GroupUserItem `json:"users"`
-}
-type GroupUserItem struct {
-	UserID   int    `json:"user_id"`
-	Email    string `json:"email"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
-}
-
-func (pg *PostgresStore) GetGroupById(groupId int) (*GroupWithUsers, error) {
+func (pg *Store) GetGroupById(groupId int) (*types.GroupWithUsers, error) {
 	// Query to get group details
 	groupQuery := `
 		SELECT group_id, group_name, created_by 
 		FROM Groups 
 		WHERE group_id = $1;`
 
-	var group models.Group
+	var group types.Group
 	err := pg.db.QueryRow(groupQuery, groupId).Scan(&group.GroupID, &group.GroupName, &group.CreatedBy)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -231,9 +258,9 @@ func (pg *PostgresStore) GetGroupById(groupId int) (*GroupWithUsers, error) {
 	}
 	defer rows.Close()
 
-	var users []GroupUserItem
+	var users []types.GroupUserItem
 	for rows.Next() {
-		var user GroupUserItem
+		var user types.GroupUserItem
 		if err := rows.Scan(&user.UserID, &user.Email, &user.Username, &user.Role); err != nil {
 			return nil, err
 		}
@@ -245,14 +272,14 @@ func (pg *PostgresStore) GetGroupById(groupId int) (*GroupWithUsers, error) {
 	}
 
 	// Return the group along with users
-	return &GroupWithUsers{
+	return &types.GroupWithUsers{
 		Group: group,
 		Users: users,
 	}, nil
 }
 
 // IsUserAdminInGroup checks if the user is an admin in the specified group.
-func (pg *PostgresStore) IsUserAdminInGroup(userId, groupId int) (bool, error) {
+func (pg *Store) IsUserAdminInGroup(userId, groupId int) (bool, error) {
 	fmt.Println("IsUserAdminInGroup entered ")
 	query := `
 	SELECT COUNT(*) 
@@ -260,7 +287,7 @@ func (pg *PostgresStore) IsUserAdminInGroup(userId, groupId int) (bool, error) {
 	WHERE user_id = $1 AND group_id = $2 AND role = $3;`
 
 	var count int
-	err := pg.db.QueryRow(query, userId, groupId, models.Admin).Scan(&count)
+	err := pg.db.QueryRow(query, userId, groupId, types.Admin).Scan(&count)
 	if err != nil {
 		return false, err
 	}
@@ -269,7 +296,7 @@ func (pg *PostgresStore) IsUserAdminInGroup(userId, groupId int) (bool, error) {
 }
 
 // IsGroupCreator checks if the user is the creator of the specified group.
-func (pg *PostgresStore) IsGroupCreator(userId, groupId int) (bool, error) {
+func (pg *Store) IsGroupCreator(userId, groupId int) (bool, error) {
 	fmt.Println("IsGroupCreator entered ")
 	query := `
 	SELECT COUNT(*) 
@@ -286,9 +313,9 @@ func (pg *PostgresStore) IsGroupCreator(userId, groupId int) (bool, error) {
 }
 
 // GetUserRoleInGroup retrieves the role of a user in a specified group based on their email.
-func (pg *PostgresStore) GetUserRoleInGroup(userEmail string, groupId int) (models.Role, error) {
+func (pg *Store) GetUserRoleInGroup(userEmail string, groupId int) (types.Role, error) {
 	fmt.Println("GetUserRoleInGroup entered ")
-	var role models.Role
+	var role types.Role
 
 	// SQL query to retrieve the user's role in the specified group
 	query := `
@@ -307,20 +334,4 @@ func (pg *PostgresStore) GetUserRoleInGroup(userEmail string, groupId int) (mode
 	}
 
 	return role, nil // Return the user's role
-}
-
-type AddUserToGroupReq struct {
-	UserEmail string      `json:"user_email"`
-	Role      models.Role `json:"role"`
-}
-
-type GetUserGroupRes struct {
-	GroupID   int    `json:"group_id"`
-	GroupName string `json:"group_name"`
-	Role      string `json:"role"`
-}
-
-type UserRes struct {
-	UserID   int    `json:"user_id" db:"user_id"`
-	Username string `json:"username" db:"username"`
 }

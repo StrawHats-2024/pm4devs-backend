@@ -1,8 +1,10 @@
-package server
+package auth
 
 import (
 	"fmt"
-	"pm4devs-backend/pkg/models"
+	"net/http"
+	"pm4devs-backend/types"
+	"pm4devs-backend/utils"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v4"
@@ -16,7 +18,7 @@ type Claims struct {
 // TODO: Make secretKey env
 var secretKey = []byte("secret-key")
 
-func validateToken(tokenString string) (*Claims, error) {
+func ValidateToken(tokenString string) (*Claims, error) {
 	claims := &Claims{}
 
 	// Parse the token
@@ -36,7 +38,7 @@ func validateToken(tokenString string) (*Claims, error) {
 	return claims, nil
 }
 
-func createJWT(user *models.User) (string, error) {
+func CreateJWT(user *types.User) (string, error) {
 	expirationTime := time.Now().Add(time.Hour * 24)
 	claims := &Claims{
 		UserId: user.UserID,
@@ -54,7 +56,7 @@ func createJWT(user *models.User) (string, error) {
 	return tokenString, nil
 }
 
-func refreshToken(tokenString string) (string, error) {
+func RefreshToken(tokenString string) (string, error) {
 	claims := &Claims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
@@ -95,3 +97,46 @@ func refreshToken(tokenString string) (string, error) {
 
 	return tokenString, nil
 }
+
+
+// auth middleware
+func WithAuth(f http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("token")
+		if err != nil {
+			if err == http.ErrNoCookie {
+				// If the token is missing, return an unauthorized status
+				http.Error(w, "Missing token", http.StatusUnauthorized)
+				return
+			}
+			// For any other error, return a bad request status
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+
+		tokenString := cookie.Value
+		claims, err := ValidateToken(tokenString)
+		fmt.Println("claims: ", claims.UserId)
+		if err != nil {
+			utils.WriteJSON(w, http.StatusUnauthorized, err.Error())
+			return
+		}
+		f(w, r)
+	}
+
+}
+
+
+// Gets userId by reading cookie from the request
+func GetUserIdfromRequest(r *http.Request) (int, error) {
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		return -1, err
+	}
+	claims, err := ValidateToken(cookie.Value)
+	if err != nil {
+		return -1, err
+	}
+	return claims.UserId, nil
+}
+
