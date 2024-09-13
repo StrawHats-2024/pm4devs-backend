@@ -23,7 +23,7 @@ type RegisterUserResponse struct {
 }
 
 type UpdateSecretPayload struct {
-	EncryptedData string `json:"encrypted_data" db:"encrypted_data"`
+	EncryptedData string `json:"encrypted_data" db:"encrypted_data" validate:"required"`
 	Description   string `json:"description" db:"description"`
 }
 
@@ -33,8 +33,8 @@ type UserInGroup struct {
 }
 
 type AddUserToGroupPayload struct {
-	UserEmail string `json:"user_email"`
-	Role      Role   `json:"role"`
+	UserEmail string `json:"user_email" validate:"required,email"`
+	Role      Role   `json:"role" validate:"required"`
 }
 
 type GetUserGroupRes struct {

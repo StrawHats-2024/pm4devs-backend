@@ -9,6 +9,7 @@ import (
 	"pm4devs-backend/utils"
 	"strconv"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 )
 
@@ -43,7 +44,7 @@ func (s *Handler) handleRemoveUser(w http.ResponseWriter, r *http.Request) error
 	}
 
 	req := struct {
-		UserEmail string `json:"user_email"`
+		UserEmail string `json:"user_email" validate:"required,email"`
 	}{}
 
 	if !isAdmin {
@@ -55,8 +56,10 @@ func (s *Handler) handleRemoveUser(w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 
-	if req.UserEmail == "" {
-		return utils.WriteJSON(w, http.StatusBadRequest, utils.ApiError{Error: "User email is required."})
+	if err := utils.Validate.Struct(req); err != nil {
+		errors := err.(validator.ValidationErrors)
+		return utils.WriteJSON(w, http.StatusBadRequest,
+			utils.ApiError{Error: fmt.Errorf("invalid payload: %v", errors).Error()})
 	}
 
 	// Check if the user to be deleted is a member of the group and get their role

@@ -9,6 +9,7 @@ import (
 	"pm4devs-backend/utils"
 	"strconv"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 )
 
@@ -23,6 +24,18 @@ func (h *Handler) handleAddUser(w http.ResponseWriter, r *http.Request) error {
 	groupId, err := strconv.Atoi(groupIdStr)
 	if err != nil {
 		return err
+	}
+
+	var req types.AddUserToGroupPayload
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return err
+	}
+
+	if err := utils.Validate.Struct(req); err != nil {
+		errors := err.(validator.ValidationErrors)
+		return utils.WriteJSON(w, http.StatusBadRequest,
+			utils.ApiError{Error: fmt.Errorf("invalid payload: %v", errors).Error()})
 	}
 
 	userId, err := auth.GetUserIdfromRequest(r)
@@ -46,14 +59,6 @@ func (h *Handler) handleAddUser(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	var req types.AddUserToGroupPayload
-	err = json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		return err
-	}
-	if req.UserEmail == "" {
-		return utils.WriteJSON(w, http.StatusBadRequest, utils.ApiError{Error: "User email is required."})
-	}
 	if req.Role != types.Admin && req.Role != types.Member {
 		return utils.WriteJSON(w, http.StatusBadRequest, utils.ApiError{Error: "Invalid Role: Only 'member' & 'admin' are allow roles"})
 	}

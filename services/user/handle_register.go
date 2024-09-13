@@ -9,6 +9,8 @@ import (
 	"pm4devs-backend/types"
 	"pm4devs-backend/utils"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 )
 
 func (s *Handler) handleRegister(w http.ResponseWriter, r *http.Request) error {
@@ -24,6 +26,13 @@ func (s *Handler) handleRegister(w http.ResponseWriter, r *http.Request) error {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
+
+	if err := utils.Validate.Struct(req); err != nil {
+		errors := err.(validator.ValidationErrors)
+		return utils.WriteJSON(w, http.StatusBadRequest,
+			utils.ApiError{Error: fmt.Errorf("invalid payload: %v", errors).Error()})
+	}
+
 	user, err := utils.NewUser(req.Email, req.Username, req.Password)
 	if err != nil {
 		return err

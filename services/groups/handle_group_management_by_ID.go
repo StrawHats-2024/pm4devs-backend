@@ -51,7 +51,6 @@ func (h *Handler) handleGroupManagementWithId(w http.ResponseWriter, r *http.Req
 			return err
 		}
 		res := struct {
-			GroupId int    `json:"group_id"`
 			Message string `json:"message"`
 		}{
 			Message: "Group name updated successfully",

@@ -2,12 +2,15 @@ package utils
 
 import (
 	"encoding/json"
+	"github.com/go-playground/validator/v10"
 	"net/http"
 	"pm4devs-backend/types"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
+
+var Validate = validator.New()
 
 func WriteJSON(w http.ResponseWriter, status int, v any) error {
 	w.Header().Add("Content-Type", "application/json")
@@ -50,4 +53,3 @@ func HashPassword(password string) (string, error) {
 
 	return string(hash), nil
 }
-
