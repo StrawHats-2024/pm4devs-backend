@@ -1,12 +1,21 @@
-package db
+package secrets
 
 import (
+	"database/sql"
 	"fmt"
-	"pm4devs-backend/pkg/models"
+	"pm4devs-backend/types"
 	"time"
 )
 
-func (pg *PostgresStore) CreateSecret(secret *models.Secret) (int, error) {
+type Store struct {
+	db *sql.DB
+}
+
+func NewStore(db *sql.DB) *Store {
+	return &Store{db: db}
+}
+
+func (pg *Store) CreateSecret(secret *types.Secret) (int, error) {
 	query := `
   INSERT INTO Secret (user_id, secret_type, encrypted_data, description)
   VALUES ($1, $2, $3, $4) RETURNING secret_id;
@@ -21,8 +30,8 @@ func (pg *PostgresStore) CreateSecret(secret *models.Secret) (int, error) {
 	return secretId, nil
 }
 
-func (pg *PostgresStore) GetAllSecret() ([]*models.Secret, error) {
-	secrets := []*models.Secret{}
+func (pg *Store) GetAllSecret() ([]*types.Secret, error) {
+	secrets := []*types.Secret{}
 
 	query := `
   SELECT *
@@ -30,10 +39,10 @@ func (pg *PostgresStore) GetAllSecret() ([]*models.Secret, error) {
   `
 	rows, err := pg.db.Query(query)
 	if err != nil {
-		return []*models.Secret{}, err
+		return []*types.Secret{}, err
 	}
 	for rows.Next() {
-		secret := new(models.Secret)
+		secret := new(types.Secret)
 		err := rows.Scan(
 			&secret.SecretID,
 			&secret.UserID,
@@ -44,7 +53,7 @@ func (pg *PostgresStore) GetAllSecret() ([]*models.Secret, error) {
 			&secret.UpdatedAt,
 		)
 		if err != nil {
-			return []*models.Secret{}, err
+			return []*types.Secret{}, err
 		}
 		secrets = append(secrets, secret)
 	}
@@ -52,13 +61,13 @@ func (pg *PostgresStore) GetAllSecret() ([]*models.Secret, error) {
 	return secrets, nil
 }
 
-func (pg *PostgresStore) GetSecretById(secretId int) (*models.Secret, error) {
+func (pg *Store) GetSecretById(secretId int) (*types.Secret, error) {
 	query := `
   SELECT *
   FROM Secret
   WHERE secret_id = $1;
   `
-	secret := new(models.Secret)
+	secret := new(types.Secret)
 	err := pg.db.QueryRow(query, secretId).Scan(
 		&secret.SecretID,
 		&secret.UserID,
@@ -74,8 +83,8 @@ func (pg *PostgresStore) GetSecretById(secretId int) (*models.Secret, error) {
 	return secret, nil
 }
 
-func (pg *PostgresStore) GetAllSecretsByUserID(userId int) ([]*models.Secret, error) {
-	secrets := []*models.Secret{}
+func (pg *Store) GetAllSecretsByUserID(userId int) ([]*types.Secret, error) {
+	secrets := []*types.Secret{}
 	query := `
   SELECT *
   FROM Secret
@@ -83,10 +92,10 @@ func (pg *PostgresStore) GetAllSecretsByUserID(userId int) ([]*models.Secret, er
   `
 	rows, err := pg.db.Query(query, userId)
 	if err != nil {
-		return []*models.Secret{}, err
+		return []*types.Secret{}, err
 	}
 	for rows.Next() {
-		secret := new(models.Secret)
+		secret := new(types.Secret)
 		err := rows.Scan(
 			&secret.SecretID,
 			&secret.UserID,
@@ -97,7 +106,7 @@ func (pg *PostgresStore) GetAllSecretsByUserID(userId int) ([]*models.Secret, er
 			&secret.UpdatedAt,
 		)
 		if err != nil {
-			return []*models.Secret{}, err
+			return []*types.Secret{}, err
 		}
 		secrets = append(secrets, secret)
 	}
@@ -105,7 +114,7 @@ func (pg *PostgresStore) GetAllSecretsByUserID(userId int) ([]*models.Secret, er
 	return secrets, nil
 }
 
-func (pg *PostgresStore) DeleteSecretById(secretId int) error {
+func (pg *Store) DeleteSecretById(secretId int) error {
 
 	query := `
   DELETE FROM Secret 
@@ -126,12 +135,7 @@ func (pg *PostgresStore) DeleteSecretById(secretId int) error {
 	return nil
 }
 
-type UpdateSecretReq struct {
-	EncryptedData string `json:"encrypted_data" db:"encrypted_data"`
-	Description   string `json:"description" db:"description"`
-}
-
-func (pg *PostgresStore) UpdateSecretById(secretId int, data UpdateSecretReq) error {
+func (pg *Store) UpdateSecretById(secretId int, data types.UpdateSecretPayload) error {
 	query := `
     UPDATE Secret
     SET encrypted_data = $1, description = $2, updated_at = $3
