@@ -23,7 +23,9 @@
   - `201 Created`: User registered successfully.
   ```json
   {
-    "message": "User registered successfully"
+      "token": "jwt_token",
+    "message": "User registered successfully",
+      "user_id": 1
   }
   ```
   - `400 Bad Request`: Invalid email or password format.
@@ -47,7 +49,8 @@
     "user_id": "1234"
   }
   ```
-  - `401 Unauthorized`: Invalid credentials.
+  - `401 Unauthorized`: Invalid credentials. 
+  - `400 Bad Request`: Invalid email or password format.
 
 #### 3. **Refresh JWT Token**
 - **Endpoint**: `/auth/refresh`

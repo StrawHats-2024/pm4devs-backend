@@ -24,3 +24,9 @@ quick-setup:
 	$(MAKE) db-up && \
 	$(MAKE) build && \
 	./bin/pm4devs-backend
+
+test:
+	@go test ./...
+
+test-v:
+	@go test -v ./...

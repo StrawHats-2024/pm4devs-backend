@@ -54,9 +54,9 @@ func (s *Handler) handleRegister(w http.ResponseWriter, r *http.Request) error {
 		Path:    "/",
 		Expires: time.Now().Add(time.Hour * 24),
 	})
-	err = utils.WriteJSON(w, http.StatusOK, types.RegisterUserResponse{
+	err = utils.WriteJSON(w, http.StatusCreated, types.RegisterUserResponse{
 		Token:   token,
-		Message: "User Registered successfully.",
+		Message: "User registered successfully",
 		UserId:  int64(userId),
 	})
 	return nil

@@ -7,7 +7,7 @@ type LoginPayload struct {
 
 type LoginResponse struct {
 	Token  string `json:"token"`
-	UserId int64  `json:"userId"`
+	UserId int64  `json:"user_id"`
 }
 
 type RegisterUserPayload struct {
@@ -19,7 +19,7 @@ type RegisterUserPayload struct {
 type RegisterUserResponse struct {
 	Token   string `json:"token"`
 	Message string `json:"message"`
-	UserId  int64  `json:"userId"`
+	UserId  int64  `json:"user_id"`
 }
 
 type UpdateSecretPayload struct {
