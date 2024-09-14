@@ -17,8 +17,8 @@ func NewHandler(store types.SecretStore) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/secrets",
+	router.Handle("/secrets",
 		auth.WithAuth(utils.MakeHTTPHandleFunc(h.handleSecretsManagement)))
-	router.HandleFunc("/secrets/{secret_id}",
+	router.Handle("/secrets/{secret_id}",
 		auth.WithAuth(utils.MakeHTTPHandleFunc(h.handleSecretsManagementById)))
 }

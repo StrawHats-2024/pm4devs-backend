@@ -19,17 +19,16 @@ func NewHandler(store types.GroupStore) *Handler {
 
 func (s *Handler) RegisterRoutes(router *mux.Router) {
 
-	router.HandleFunc("/groups",
+	router.Handle("/groups",
 		auth.WithAuth(utils.MakeHTTPHandleFunc(s.handleGroupManagement)))
 
-	router.HandleFunc("/groups/{group_id}/add_user",
+	router.Handle("/groups/{group_id}/add_user",
 		auth.WithAuth(utils.MakeHTTPHandleFunc(s.handleAddUser))).Methods(http.MethodPost)
 
-	router.HandleFunc("/groups/{group_id}",
+	router.Handle("/groups/{group_id}",
 		auth.WithAuth(utils.MakeHTTPHandleFunc(s.handleGroupManagementWithId))).Methods(
 		http.MethodGet, http.MethodDelete, http.MethodPut)
 
-	router.HandleFunc("/groups/{group_id}/remove_user",
+	router.Handle("/groups/{group_id}/remove_user",
 		auth.WithAuth(utils.MakeHTTPHandleFunc(s.handleRemoveUser))).Methods(http.MethodDelete)
-
 }

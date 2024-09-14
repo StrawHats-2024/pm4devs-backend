@@ -19,5 +19,5 @@ func NewHandler(store types.UserStore) *Handler {
 func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/auth/login", utils.MakeHTTPHandleFunc(h.handleLogin))
 	router.HandleFunc("/auth/register", utils.MakeHTTPHandleFunc(h.handleRegister))
-	router.HandleFunc("/auth/logout", auth.WithAuth(utils.MakeHTTPHandleFunc(h.handleLogout)))
+	router.Handle("/auth/logout", auth.WithAuth(utils.MakeHTTPHandleFunc(h.handleLogout)))
 }

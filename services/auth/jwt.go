@@ -1,10 +1,10 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"pm4devs-backend/types"
-	"pm4devs-backend/utils"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v4"
@@ -98,10 +98,13 @@ func RefreshToken(tokenString string) (string, error) {
 	return tokenString, nil
 }
 
+type key string
 
-// auth middleware
-func WithAuth(f http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+const UserIDKey key = "userID"
+
+// WithAuth is a middleware that validates the token and sets the userId in the context.
+func WithAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("token")
 		if err != nil {
 			if err == http.ErrNoCookie {
@@ -116,27 +119,27 @@ func WithAuth(f http.HandlerFunc) http.HandlerFunc {
 
 		tokenString := cookie.Value
 		claims, err := ValidateToken(tokenString)
-		fmt.Println("claims: ", claims.UserId)
 		if err != nil {
-			utils.WriteJSON(w, http.StatusUnauthorized, err.Error())
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		f(w, r)
-	}
 
+		// Log the userId for debugging purposes
+		fmt.Println("setting user at middleware: ", claims.UserId)
+
+		// Store userId in the request context
+		ctx := context.WithValue(r.Context(), UserIDKey, claims.UserId)
+
+		// Call the next handler with the updated context
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
-
-// Gets userId by reading cookie from the request
 func GetUserIdfromRequest(r *http.Request) (int, error) {
-	cookie, err := r.Cookie("token")
-	if err != nil {
-		return -1, err
+	userId, ok := r.Context().Value(UserIDKey).(int)
+	fmt.Println("Trying to read userId: ", userId)
+	if !ok {
+		return -1, fmt.Errorf("User ID not found in context")
 	}
-	claims, err := ValidateToken(cookie.Value)
-	if err != nil {
-		return -1, err
-	}
-	return claims.UserId, nil
+	return userId, nil
 }
-
