@@ -1,7 +1,8 @@
+
 ## API Design 
 
 ### **Base URL**: 
-`https://api.passwordmanager.dev/v1`
+`https://api.passwordmanager.dev/api/v1`
 
 ---
 
@@ -23,9 +24,9 @@
   - `201 Created`: User registered successfully.
   ```json
   {
-      "token": "jwt_token",
+    "token": "jwt_token",
     "message": "User registered successfully",
-      "user_id": 1
+    "user_id": 1
   }
   ```
   - `400 Bad Request`: Invalid email or password format.
@@ -196,7 +197,6 @@
   }
   ```
   - `404 Not Found`: User not found.
-  - `403 Forbidden`: You don't have permission
 
 #### 10. **Share Secret with Group**
 - **Endpoint**: `/secrets/{secret_id}/share/group`
@@ -237,11 +237,11 @@
   ]
   ```
 
-  #### 11. **Revoke Access from User**
+#### 12. **Revoke Access from User**
 - **Endpoint**: `/secrets/{secret_id}/revoke`
 - **Method**: `POST`
 - **Description**: Revoke access to a secret from a specified user.
-- **Authorization**: JWT token required.
+- **Authorization**: JWT token required (secret owner or admin permissions).
 - **Request**:
   ```json
   {
@@ -257,11 +257,11 @@
   ```
   - `404 Not Found`: User not found or does not have access to the secret.
 
-#### 12. **Revoke Access from Group**
+#### 13. **Revoke Access from Group**
 - **Endpoint**: `/secrets/{secret_id}/revoke/group`
 - **Method**: `POST`
 - **Description**: Revoke access to a secret from a specified group.
-- **Authorization**: JWT token required.
+- **Authorization**: JWT token required (secret owner or admin permissions).
 - **Request**:
   ```json
   {
@@ -277,13 +277,11 @@
   ```
   - `404 Not Found`: Group not found or user not part of the group.
 
-
-
 ---
 
 ### **Group Management**
 
-#### 13. **Create Group**
+#### 14. **Create Group**
 - **Endpoint**: `/groups`
 - **Method**: `POST`
 - **Description**: Create a new group.
@@ -303,7 +301,7 @@
   }
   ```
 
-#### 14. **Get User Groups**
+#### 15. **Get User Groups**
 - **Endpoint**: `/groups`
 - **Method**: `GET`
 - **Description**: Retrieve all groups the authenticated user is part of.
@@ -319,8 +317,9 @@
     }
   ]
   ```
-  #### 15. **Update Group Name**
-- **Endpoint**: `/groups{group_id}`
+
+#### 16. **Update Group Name**
+- **Endpoint**: `/groups/{group_id}`
 - **Method**: `PUT`
 - **Description**: Update the name of a specified group.
 - **Authorization**: Admin role in the group is required (user ID taken from JWT).
@@ -338,7 +337,7 @@
   }
   ```
 
-#### 16. **Delete Group**
+#### 17. **Delete Group**
 - **Endpoint**: `/groups/{group_id}`
 - **Method**: `DELETE`
 - **Description**: Delete a specified group.
@@ -351,7 +350,7 @@
   }
   ```
 
-#### 17. **Get Group by ID**
+#### 18. **Get Group by ID**
 - **Endpoint**: `/groups/{group_id}`
 - **Method**: `GET`
 - **Description**: Retrieve details of a specific group by its ID.
@@ -383,7 +382,7 @@
   }
   ```
 
-#### 18. **Add User to Group**
+#### 19. **Add User to Group**
 - **Endpoint**: `/groups/{group_id}/add_user`
 - **Method**: `POST`
 - **Description**: Add a user to a group.
@@ -404,7 +403,7 @@
   ```
   - `404 Not Found`: User or group not found.
 
-#### 19. **Remove User from Group**
+#### 20. **Remove User from Group**
 - **Endpoint**: `/groups/{group_id}/remove_user`
 - **Method**: `DELETE`
 - **Description**: Remove a user from a group.
@@ -427,7 +426,7 @@
 
 ### **Audit Logging**
 
-#### 20. **Get Audit Logs**
+#### 21. **Get Audit Logs**
 - **Endpoint**: `/audit/logs`
 - **Method**: `GET`
 - **Description**: Retrieve all actions performed by the user for audit purposes, including secret access, updates, and group management activities.
@@ -451,7 +450,7 @@
   ]
   ```
 
-#### 21. **Get Audit Logs for a Secret**
+#### 22. **Get Audit Logs for a Secret**
 - **Endpoint**: `/audit/logs/secret/{secret_id}`
 - **Method**: `GET`
 - **Description**: Retrieve all actions performed on a specific secret.
@@ -475,7 +474,7 @@
 
 The CLI can be built to interact with the API. Below are examples of commands that align with the API:
 
-#### 22. **Get Secret via CLI**
+#### 23. **Get Secret via CLI**
 - **Command**: 
   ```bash
   passwordmanager-cli get secret --secret_id=5678
@@ -484,7 +483,7 @@ The CLI can be built to interact with the API. Below are examples of commands th
 - **Response**:
   - Prints the decrypted secret in the terminal after user authentication via JWT token.
   
-#### 23. **Set Secret via CLI**
+#### 24. **Set Secret via CLI**
 - **Command**:
   ```bash
   passwordmanager-cli set secret --secret_type=password --description="My DB password"
@@ -493,7 +492,7 @@ The CLI can be built to interact with the API. Below are examples of commands th
 - **Response**:
   - Returns the secret ID and a success message.
 
-#### 24. **Search Secret via CLI**
+#### 25. **Search Secret via CLI**
 - **Command**:
   ```bash
   passwordmanager-cli search secret --query="database"
@@ -526,4 +525,35 @@ To protect the API from abuse, rate-limiting should be implemented. For instance
 - **Secret Management API**: Max 100 requests per minute.
 
 ---
+
+### **Roles and Access Controls**
+
+- **Creators**:
+  - Can create groups.
+  - Are automatically assigned as the admin of the group they created.
+  - Can update or delete the group they created.
+
+- **Admins**:
+  - Can add or remove users from the group.
+  - Can update the name of the group.
+  - Can revoke access to secrets shared with their group.
+  - Cannot delete the group unless they are also the creator.
+  
+- **Members**:
+  - Can see the group's details.
+  - Can access secrets shared with the group.
+
+**Specific Endpoints with role-based access:**
+
+- **Create Group**: Any authenticated user can create a group.
+- **Get User Groups**: Any authenticated user can retrieve the groups they are part of.
+- **Update Group Name**: Requires admin role in the group.
+- **Delete Group**: Requires the creator role.
+- **Get Group by ID**: Any member of the group.
+- **Add User to Group**: Requires admin role.
+- **Remove User from Group**: Requires admin role.
+- **Share Secret with User/Group**: Any authenticated user.
+- **Revoke Access**: Requires secret owner or admin permissions.
+
+
 

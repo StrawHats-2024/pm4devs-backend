@@ -8,6 +8,7 @@ import (
 	"os"
 	"pm4devs-backend/services/groups"
 	"pm4devs-backend/services/secrets"
+	"pm4devs-backend/services/sharing"
 	"pm4devs-backend/services/user"
 
 	"github.com/gorilla/handlers"
@@ -40,6 +41,9 @@ func (s *APIServer) Run() error {
 	groupsStore := groups.NewStore(s.db)
 	groupsHandler := groups.NewHandler(groupsStore)
 	groupsHandler.RegisterRoutes(subrouter)
+
+	sharingHandler := sharing.NewHandler(secretsStore)
+	sharingHandler.RegisterRoutes(subrouter)
 
 	logger := getLogger("api_server.log")
 	loggingRouter := handlers.LoggingHandler(logger, router)

@@ -14,6 +14,14 @@ const (
 	APIKey   SecretType = "api_key"
 )
 
+type PermissionType string
+
+const (
+	WriteRead PermissionType = "write"
+	ReadOnly  PermissionType = "read"
+  NotAllowed PermissionType = "Not Allowed"
+)
+
 type User struct {
 	UserID       int       `json:"user_id" db:"user_id"`
 	Email        string    `json:"email" db:"email"`
@@ -59,12 +67,12 @@ type UserGroup struct {
 }
 
 type SharedSecret struct {
-	SharedSecretID  int       `json:"shared_secret_id" db:"shared_secret_id"`
-	SecretID        int       `json:"secret_id" db:"secret_id"`
-	SharedWithUser  *int      `json:"shared_with_user,omitempty" db:"shared_with_user"`
-	SharedWithGroup *int      `json:"shared_with_group,omitempty" db:"shared_with_group"`
-	Permissions     string    `json:"permissions" db:"permissions"`
-	SharedAt        time.Time `json:"shared_at" db:"shared_at"`
+	SharedSecretID  int        `json:"shared_secret_id" db:"shared_secret_id"`
+	SecretID        int        `json:"secret_id" db:"secret_id"`
+	SharedWithUser  *int       `json:"shared_with_user,omitempty" db:"shared_with_user"`
+	SharedWithGroup *int       `json:"shared_with_group,omitempty" db:"shared_with_group"`
+	Permissions     PermissionType `json:"permissions" db:"permissions"`
+	SharedAt        time.Time  `json:"shared_at" db:"shared_at"`
 }
 
 type AuditLog struct {

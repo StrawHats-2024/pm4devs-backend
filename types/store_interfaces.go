@@ -35,6 +35,24 @@ type SecretStore interface {
 
 	// UpdateSecretById updates a secret identified by its ID using the provided request data.
 	UpdateSecretById(int, UpdateSecretPayload) error
+
+	// ShareSecretWithUser shares a secret with a user and returns an error if any.
+	ShareSecretWithUser(secretID int, userEmail string, permission PermissionType) error
+
+	// ShareSecretWithGroup shares a secret with a group and returns an error if any.
+	ShareSecretWithGroup(secretID int, groupID int, permission PermissionType) error
+
+	// GetAllSharedSecrets retrieves all secrets shared with a specific user by their ID.
+	GetAllSharedSecrets(userID int) ([]*Secret, error)
+
+	// RevokeSharingFromUser revokes sharing of a secret from a user identified by their email.
+	RevokeSharingFromUser(secretID int, userEmail string) error
+
+	// RevokeSharingFromGroup revokes sharing of a secret from a group.
+	RevokeSharingFromGroup(secretID int, groupID int) error
+
+	// GetUserSecretPermission retrieves the permission of a user for a given secret.
+	GetUserSecretPermission(userID int, secretID int) (PermissionType, error)
 }
 
 type GroupStore interface {
@@ -71,4 +89,3 @@ type GroupStore interface {
 	// Get user role with user_email and groupId
 	GetUserRoleInGroup(string, int) (Role, error)
 }
-

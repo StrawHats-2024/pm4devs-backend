@@ -22,6 +22,26 @@ type RegisterUserResponse struct {
 	UserId  int64  `json:"user_id"`
 }
 
+type ShareSecretToUserPayload struct {
+	UserEmail   string         `json:"user_email" validate:"required,email"`
+	Permissions PermissionType `json:"permissions" validate:"required"`
+}
+
+type ShareSecretToGroupPayload struct {
+	GroupId     int            `json:"group_id" validate:"required"`
+	Permissions PermissionType `json:"permissions" validate:"required"`
+}
+
+type GetSharedSecretRes struct {
+	SecretID    string         `json:"secret_id"`
+	SharedBy    string         `json:"shared_by"`
+	Permissions PermissionType `json:"permissions"`
+	Description string         `json:"description"`
+}
+type ShareSecretResponse struct {
+	Message string `json:"message"`
+}
+
 type UpdateSecretPayload struct {
 	EncryptedData string `json:"encrypted_data" db:"encrypted_data" validate:"required"`
 	Description   string `json:"description" db:"description"`
@@ -36,7 +56,9 @@ type AddUserToGroupPayload struct {
 	UserEmail string `json:"user_email" validate:"required,email"`
 	Role      Role   `json:"role" validate:"required"`
 }
-
+type RevokeSecretAccessPayload struct {
+	UserEmail string `json:"user_email" validate:"required,email"`
+}
 type GetUserGroupRes struct {
 	GroupID   int    `json:"group_id"`
 	GroupName string `json:"group_name"`

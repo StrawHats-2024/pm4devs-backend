@@ -2,10 +2,12 @@ package utils
 
 import (
 	"encoding/json"
-	"github.com/go-playground/validator/v10"
+	"fmt"
 	"net/http"
 	"pm4devs-backend/types"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -52,4 +54,15 @@ func HashPassword(password string) (string, error) {
 	}
 
 	return string(hash), nil
+}
+
+func ValidateRequestBody[T any](req T, w http.ResponseWriter) error {
+	if err := Validate.Struct(req); err != nil {
+		if validationErrors, ok := err.(validator.ValidationErrors); ok {
+			return fmt.Errorf("invalid payload: %v", validationErrors)
+		} else {
+			return err
+		}
+	}
+	return nil
 }

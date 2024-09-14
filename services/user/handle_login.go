@@ -9,8 +9,6 @@ import (
 	"pm4devs-backend/types"
 	"pm4devs-backend/utils"
 	"time"
-
-	"github.com/go-playground/validator/v10"
 )
 
 func (s *Handler) handleLogin(w http.ResponseWriter, r *http.Request) error {
@@ -22,16 +20,14 @@ func (s *Handler) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	var req types.LoginPayload
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		fmt.Println("err: ", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
-	if err := utils.Validate.Struct(req); err != nil {
-		errors := err.(validator.ValidationErrors)
-		return utils.WriteJSON(w, http.StatusBadRequest,
-			utils.ApiError{Error: fmt.Errorf("invalid payload: %v", errors).Error()})
-	}
 
+	err = utils.ValidateRequestBody(req, w)
+	if err != nil {
+		return err
+	}
 	user, err := s.store.GetUserByEmail(req.Email)
 	// TODO: Update error message to when email not found
 	if err != nil {

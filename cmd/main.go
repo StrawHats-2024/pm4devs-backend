@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
+	log.Println("Starting up server")
 	database, err := db.NewPostgresStore()
 	if err != nil {
 		log.Fatal(err)
