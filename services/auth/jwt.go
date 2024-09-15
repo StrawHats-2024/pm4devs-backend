@@ -32,7 +32,7 @@ func ValidateToken(tokenString string) (*Claims, error) {
 	}
 
 	if !token.Valid {
-		return nil, fmt.Errorf("invalid token")
+		return nil, fmt.Errorf("Invalid token")
 	}
 
 	return claims, nil

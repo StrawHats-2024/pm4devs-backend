@@ -52,10 +52,9 @@ func (s *Handler) handleLogin(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	err = utils.WriteJSON(w, http.StatusOK, types.LoginResponse{
+	return utils.WriteJSON(w, http.StatusOK, types.LoginResponse{
 		Token:  token,
 		UserId: int64(user.UserID),
 	})
-	return nil
 
 }

@@ -52,6 +52,48 @@
   - `401 Unauthorized`: Invalid credentials. 
   - `400 Bad Request`: Invalid email or password format.
 
+#### 3 **Token Verification**
+- **Endpoint**: `/auth/verify-token`
+- **Method**: `POST`
+- **Description**: Verifies a given JWT token and returns its validity along with associated user information.
+
+##### **Request**:
+- **Body**: 
+  ```json
+  {
+    "token": "jwt_token"
+  }
+  ```
+- **Fields**:
+  - `token` (string, required): The JWT token to be verified.
+
+##### **Response**:
+- **200 OK**: Token is valid.
+  ```json
+  {
+    "valid": true,
+    "user_id": 1234,
+    "message": "Token is valid"
+  }
+  ```
+- **401 Unauthorized**: Token is invalid or expired.
+  ```json
+  {
+    "error": "Invalid token"
+  }
+  ```
+- **400 Bad Request**: Missing or improperly formatted token.
+  ```json
+  {
+    "error": "Bad request"
+  }
+  ```
+
+##### **Errors**:
+- `400 Bad Request`: The request body is missing or the token is not in the correct format.
+- `401 Unauthorized`: The token is either invalid or has expired.
+
+
 #### 3. **Refresh JWT Token**
 - **Endpoint**: `/auth/refresh`
 - **Method**: `POST`
