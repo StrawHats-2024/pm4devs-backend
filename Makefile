@@ -1,32 +1,42 @@
+# Variables for reuse
+BINARY=bin/pm4devs-backend
+CMD=cmd/main.go
+DOCKER_COMPOSE=docker compose
+
+# Targets
 db-up:
-	docker compose up -d
+	$(DOCKER_COMPOSE) up -d
 
 db-down:
-	docker compose down
+	$(DOCKER_COMPOSE) down
 
 build:
-	go build -o bin/pm4devs-backend cmd/main.go
+	go build -o $(BINARY) $(CMD)
 
 dev:
-	air --build.cmd "go build -o bin/pm4devs-backend cmd/main.go" --build.bin "./bin/pm4devs-backend"
+	air --build.cmd "go build -o $(BINARY) $(CMD)" --build.bin "./$(BINARY)"
 
 run: build
-	./bin/pm4devs-backend
+	./$(BINARY)
 
-setup: db-up
-	go mod tidy
+setup:
+	$(MAKE) db-up
 	$(MAKE) build
-	./bin/pm4devs-backend
+	@go mod tidy
+	$(MAKE) run
 
 quick-setup:
+	@echo "Setting Envs, database & build files"
 	@source ./example.envrc && \
+	goose up \
 	go mod tidy && \
 	$(MAKE) db-up && \
 	$(MAKE) build && \
-	./bin/pm4devs-backend
+	./$(BINARY)
 
 test:
 	@go test ./...
 
 test-v:
 	@go test -v ./...
+
