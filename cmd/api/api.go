@@ -45,12 +45,18 @@ func (s *APIServer) Run() error {
 	sharingHandler := sharing.NewHandler(secretsStore)
 	sharingHandler.RegisterRoutes(subrouter)
 
+	corsHandler := handlers.CORS(
+		handlers.AllowedOrigins([]string{"*"}), // Allow all origins, modify as necessary
+		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
+		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
+	)
+
 	logger := getLogger("api_server.log")
 	loggingRouter := handlers.LoggingHandler(logger, router)
 
 	log.Println("Listening on", s.addr)
 
-	return http.ListenAndServe(s.addr, loggingRouter)
+	return http.ListenAndServe(s.addr, corsHandler(loggingRouter))
 }
 
 func getLogger(fileName string) io.Writer {
