@@ -43,6 +43,7 @@ func (s *Handler) handleRegister(w http.ResponseWriter, r *http.Request) error {
 		fmt.Println("err: ", err)
 		return err
 	}
+	user.UserID = userId
 
 	token, err := auth.CreateJWT(user)
 	if err != nil {
