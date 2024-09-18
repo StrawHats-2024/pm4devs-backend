@@ -35,11 +35,7 @@ func (h *Handler) handleSecretsManagement(w http.ResponseWriter, r *http.Request
 			return err
 		}
 		secret.CreatedAt = time.Now()
-		if secret.UserID != userIdFromCookie {
-			err := utils.WriteJSON(w, http.StatusUnauthorized,
-				utils.ApiError{Error: "Only allowed create secret with your user_id"})
-			return err
-		}
+    secret.UserID = userIdFromCookie
 		secreId, err := h.store.CreateSecret(secret)
 		if err != nil {
 			return err
