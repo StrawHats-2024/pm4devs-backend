@@ -102,22 +102,31 @@ type key string
 
 const UserIDKey key = "userID"
 
-// WithAuth is a middleware that validates the token and sets the userId in the context.
 func WithAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("token")
+		var tokenString string
+		var err error
+
+		// First, try to extract token from the Authorization header
+		tokenString, err = extractBearerToken(r)
 		if err != nil {
-			if err == http.ErrNoCookie {
-				// If the token is missing, return an unauthorized status
-				http.Error(w, "Missing token", http.StatusUnauthorized)
+			// If no Bearer token is found, try to get the token from the "token" cookie
+			cookie, cookieErr := r.Cookie("token")
+			if cookieErr != nil {
+				if cookieErr == http.ErrNoCookie {
+					// If both the Authorization header and cookie are missing, return unauthorized
+					http.Error(w, "Missing token", http.StatusUnauthorized)
+					return
+				}
+				// For any other cookie-related error, return bad request
+				http.Error(w, "Bad request", http.StatusBadRequest)
 				return
 			}
-			// For any other error, return a bad request status
-			http.Error(w, "Bad request", http.StatusBadRequest)
-			return
+			// Use the token from the cookie
+			tokenString = cookie.Value
 		}
 
-		tokenString := cookie.Value
+		// Validate the token (whether from Bearer or cookie)
 		claims, err := ValidateToken(tokenString)
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -133,6 +142,18 @@ func WithAuth(next http.Handler) http.Handler {
 		// Call the next handler with the updated context
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func extractBearerToken(r *http.Request) (string, error) {
+	// Get the Authorization header
+	authHeader := r.Header.Get("Authorization")
+  fmt.Println("authHeader: ", authHeader);
+	if authHeader == "" {
+		return "", fmt.Errorf("authorization header missing")
+	}
+
+	// Return the token part (second part of the Authorization header)
+	return authHeader, nil
 }
 
 func GetUserIdfromRequest(r *http.Request) (int, error) {
