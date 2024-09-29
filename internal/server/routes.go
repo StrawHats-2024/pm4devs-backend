@@ -13,6 +13,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.HandleFunc("/api/health", s.HelloWorldHandler)
 	r.HandleFunc("/api/auth/register", s.handleRegister).Methods(http.MethodPost)
+	r.HandleFunc("/api/auth/login", s.handleRegister).Methods(http.MethodPost)
 
 	return r
 }

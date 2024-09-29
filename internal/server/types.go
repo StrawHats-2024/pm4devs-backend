@@ -7,7 +7,17 @@ type CreateUserPayload struct {
 	PasswordConfirm string `json:"passwordConfirm,omitempty"`
 }
 
-type CreateUserResponse struct {
+type LoginPayload struct {
+	Identity string `json:"identity,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
+type LoginResponse struct {
+	Token  string     `json:"token",omitempty`
+	Record UserRecord `json:"record"`
+}
+
+type UserRecord struct {
 	ID              string `json:"id"`
 	CollectionID    string `json:"collectionId"`
 	CollectionName  string `json:"collectionName"`
