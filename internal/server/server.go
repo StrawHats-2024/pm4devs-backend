@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -11,13 +12,19 @@ import (
 )
 
 type Server struct {
-	port int
+	port         int
+	APIEndpoints *APIEndpoints
 }
 
 func NewServer() *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
+	var BASE_URL = os.Getenv("POCKETBASE_URL")
+	if BASE_URL == "" {
+		log.Fatal("POCKETBASE_URL not found")
+	}
 	NewServer := &Server{
-		port: port,
+		port:         port,
+		APIEndpoints: NewAPIEndpoints(BASE_URL),
 	}
 
 	// Declare Server config

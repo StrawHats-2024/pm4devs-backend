@@ -11,6 +11,7 @@
 - **Method**: `POST`
 - **Endpoint**: `/auth/register`
 - **Request Body**:
+    - `name` (string, optional): User's full name.
     - `email` (string, required): User's email.
     - `password` (string, required): User's password.
     - `passwordConfirm` (string, required): Password confirmation.

@@ -24,7 +24,7 @@ clean:
 	@rm -f ./bin/pm4devs
 
 db-up:
-	./deps/pocketbase serve
+	./database/pocketbase serve
 
 # Live Reload
 dev:

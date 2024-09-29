@@ -11,7 +11,8 @@ import (
 func (s *Server) RegisterRoutes() http.Handler {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/health", s.HelloWorldHandler)
+	r.HandleFunc("/api/health", s.HelloWorldHandler)
+	r.HandleFunc("/api/auth/register", s.handleRegister).Methods(http.MethodPost)
 
 	return r
 }
