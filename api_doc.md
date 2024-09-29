@@ -4,7 +4,7 @@
 
 **Base URL**: `/api`
 
-### 1. Register
+### 1. Register ✅
 
 **Description**: Registers a new user.
 
