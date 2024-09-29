@@ -30,7 +30,6 @@ func MakeRequest(method string, url string, body io.ReadCloser) (*http.Response,
 
 
 func ForwardRequest(w http.ResponseWriter, r *http.Request, url string) {
-
 	resp, err := MakeRequest(r.Method, url, r.Body)
 	if err != nil {
 		fmt.Printf("Error while making request: %v\n", err)

@@ -66,3 +66,29 @@ func makePostReq(t *testing.T, url string, body io.Reader) *http.Response {
 	}
 	return resp
 }
+
+func makeNewReq(t *testing.T, url string, method string, body io.Reader, token string) *http.Response {
+	t.Helper()
+
+	// Create a new HTTP request
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Set the Content-Type header
+	req.Header.Set("Content-Type", "application/json")
+
+	// Add the Authorization header with the bearer token
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+
+	// Create an HTTP client and send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return resp
+}

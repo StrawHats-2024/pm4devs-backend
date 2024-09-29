@@ -51,7 +51,7 @@
 
 ---
 
-### 2. Login
+### 2. Login ✅
 
 **Description**: Authenticates a user and returns a JWT token.
 
@@ -103,7 +103,7 @@
 
 **Description**: Verifies the provided authentication token.
 
-- **Method**: `POST`
+- **Method**: `GET`
 - **Endpoint**: `/auth/verify-token`
 - **Request Headers**:
     - `Authorization: Bearer <token>` (required)
@@ -111,12 +111,8 @@
 - **Response**:
 
     **Success (200)**:
-    ```json
-    {
-      "token": "JWT_TOKEN"
-    }
-    ```
-
+    **Fail (403)**:
+    
 ---
 
 ### 4. Refresh Token
@@ -124,7 +120,7 @@
 **Description**: Refreshes the authentication token.
 
 - **Method**: `POST`
-- **Endpoint**: `/auth/refresh`
+- **Endpoint**: `/auth/refresh-token`
 - **Request Headers**:
     - `Authorization: Bearer <token>` (required)
 

@@ -12,10 +12,12 @@ type LoginPayload struct {
 	Password string `json:"password,omitempty"`
 }
 
+// Also refresh token response
 type LoginResponse struct {
-	Token  string     `json:"token",omitempty`
+	Token  string     `json:"token,omitempty"`
 	Record UserRecord `json:"record"`
 }
+
 
 type UserRecord struct {
 	ID              string `json:"id"`
