@@ -2,3 +2,5 @@
 *_ref.md
 bin
 tmp
+database/pb_*
+.DS_Store
