@@ -6,49 +6,45 @@ import (
 	"net/http"
 )
 
-func MakeRequest(method string, url string, body io.ReadCloser, originalReq *http.Request) (*http.Response, error) {
-
-	req, err := http.NewRequest(method, url, body)
+func ForwardRequest(w http.ResponseWriter, r *http.Request, url string) {
+	// Create a new request with the same method, URL, and body as the original request
+	req, err := http.NewRequest(r.Method, url, r.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %v", err)
+		fmt.Printf("Failed to create new request: %v\n", err)
+		http.Error(w, "Failed to create request", http.StatusInternalServerError)
+		return
 	}
 
-	// Set the content type to application/json
-	req.Header.Set("Content-Type", "application/json")
-
-	// Copy the Authorization header from the original request if it exists
-	authHeader := originalReq.Header.Get("Authorization")
-	if authHeader != "" {
-		req.Header.Set("Authorization", authHeader)
+	// Copy all headers from the original request to the new request
+	for header, values := range r.Header {
+		for _, value := range values {
+			req.Header.Add(header, value)
+		}
 	}
 
-	// Create an HTTP client and send the request
+	// Create an HTTP client and send the new request
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %v", err)
-	}
-
-	fmt.Println("resp status: ", resp.StatusCode)
-
-	return resp, nil
-}
-
-func ForwardRequest(w http.ResponseWriter, r *http.Request, url string) {
-	// Forward the request with the Authorization header
-	resp, err := MakeRequest(r.Method, url, r.Body, r)
-	if err != nil {
-		fmt.Printf("Error while making request: %v\n", err)
-		http.Error(w, "Failed to make request", http.StatusInternalServerError)
+		fmt.Printf("Failed to send request: %v\n", err)
+		http.Error(w, "Failed to send request", http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
 
-	w.Header().Set("Content-Type", "application/json")
+	// Copy the response headers from the new request's response to the original response
+	for header, values := range resp.Header {
+		for _, value := range values {
+			w.Header().Add(header, value)
+		}
+	}
+
+	// Set the response status code
 	w.WriteHeader(resp.StatusCode)
 
+	// Copy the response body to the original response
 	if _, err := io.Copy(w, resp.Body); err != nil {
-		fmt.Printf("Error while copying body: %v\n", err)
+		fmt.Printf("Error while copying response body: %v\n", err)
 		http.Error(w, "Failed to copy response body", http.StatusInternalServerError)
 		return
 	}
