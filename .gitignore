@@ -4,3 +4,4 @@ bin
 tmp
 database/pb_*
 .DS_Store
+scratch.md

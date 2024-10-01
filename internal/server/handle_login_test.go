@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -51,7 +50,7 @@ func TestHandleRefreshToken(t *testing.T) {
 		var resBody LoginResponse
 		err := json.NewDecoder(resp.Body).Decode(&resBody)
 		if err != nil {
-			t.Error(err)
+			t.Errorf("Error while decoding json %v", err)
 		}
 		if resBody.Token == "" {
 			t.Errorf("Token not in refresh token response response")
@@ -62,26 +61,4 @@ func TestHandleRefreshToken(t *testing.T) {
 		assertStatusCode(t, http.StatusUnauthorized, resp.StatusCode)
 	})
 }
-func assertAny(t *testing.T, want, got any) {
-	if got != want {
-		t.Errorf("Expected %v, got %v", want, got)
-	}
-}
 
-func getAuthToken(t *testing.T) string {
-	s := newTestServer()
-	server := httptest.NewServer(http.HandlerFunc(s.handleLogin))
-	defer server.Close()
-	payload := LoginPayload{Identity: "olenharris@mclaughlin.name", Password: "parikshith"}
-	resp := makePostReq(t, server.URL, getBodyJson(t, payload))
-	got := resp.StatusCode
-	want := http.StatusOK
-	assertStatusCode(t, want, got)
-	var resBody LoginResponse
-	err := json.NewDecoder(resp.Body).Decode(&resBody)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println("Token: ", resBody.Token)
-	return resBody.Token
-}

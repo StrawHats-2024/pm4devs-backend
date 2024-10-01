@@ -18,7 +18,6 @@ type LoginResponse struct {
 	Record UserRecord `json:"record"`
 }
 
-
 type UserRecord struct {
 	ID              string `json:"id"`
 	CollectionID    string `json:"collectionId"`
@@ -31,6 +30,25 @@ type UserRecord struct {
 	Updated         string `json:"updated"`
 	Name            string `json:"name"`
 	Avatar          string `json:"avatar"`
+}
+
+type SecretsResponse struct {
+	Page       int            `json:"page"`
+	PerPage    int            `json:"perPage"`
+	TotalPages int            `json:"totalPages"`
+	TotalItems int            `json:"totalItems"`
+	Items      []SecretRecord `json:"items"`
+}
+
+type SecretRecord struct {
+	ID             string `json:"id"`
+	CollectionID   string `json:"collectionId"`
+	CollectionName string `json:"collectionName"`
+	Created        string `json:"created"`
+	Updated        string `json:"updated"`
+	Name           string `json:"name"`
+	EncryptedData  string `json:"encrypted_data"`
+	Owner          string `json:"owner"`
 }
 
 type ErrorResponse struct {
