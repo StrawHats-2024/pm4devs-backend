@@ -99,7 +99,7 @@ func makeNewReq(t *testing.T, url string, method string, body io.Reader, token s
 	if err != nil {
 		t.Fatal(err)
 	}
-	req.Header.Set("Authorization", token)
+	req.Header.Set("Authorization", "Bearer "+token)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
