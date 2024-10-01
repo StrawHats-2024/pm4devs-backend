@@ -91,19 +91,19 @@ func TestAuthHeader(t *testing.T) {
 	makeNewReq(t, server.URL, "GET", nil, "test-token")
 }
 
-func makeNewReq(t *testing.T, url string, method string, body io.Reader, token string) *http.Response {
+func makeNewReq(t *testing.T, url string, method string, body io.Reader, token string) (*http.Response, error) {
 	t.Helper()
 
 	// Create a new HTTP request
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
-	return resp
+	return resp, nil
 }

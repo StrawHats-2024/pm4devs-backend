@@ -45,10 +45,13 @@ func TestHandleRefreshToken(t *testing.T) {
 
 	t.Run("Return 200 when valid bearer", func(t *testing.T) {
 		token := getAuthToken(t)
-		resp := makeNewReq(t, server.URL, http.MethodPost, nil, token)
+		resp, err := makeNewReq(t, server.URL, http.MethodPost, nil, token)
+		if err != nil {
+			t.Fatal(err)
+		}
 		assertStatusCode(t, http.StatusOK, resp.StatusCode)
 		var resBody LoginResponse
-		err := json.NewDecoder(resp.Body).Decode(&resBody)
+		err = json.NewDecoder(resp.Body).Decode(&resBody)
 		if err != nil {
 			t.Errorf("Error while decoding json %v", err)
 		}
@@ -57,8 +60,10 @@ func TestHandleRefreshToken(t *testing.T) {
 		}
 	})
 	t.Run("Return 401 when no valid bearer", func(t *testing.T) {
-		resp := makeNewReq(t, server.URL, http.MethodPost, nil, "")
+		resp, err := makeNewReq(t, server.URL, http.MethodPost, nil, "")
+		if err != nil {
+			t.Fatal(err)
+		}
 		assertStatusCode(t, http.StatusUnauthorized, resp.StatusCode)
 	})
 }
-

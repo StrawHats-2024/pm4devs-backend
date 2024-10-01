@@ -16,7 +16,10 @@ func TestHandleGetUserSecrets(t *testing.T) {
 	// NOTE: API will return 200 empty items response in case a request doesn't satisfy a listRule, 400 for unsatisfied createRule and 404 for unsatisfied viewRule, updateRule and deleteRule.
 
 	t.Run("Return 200 with empty items when invalid token", func(t *testing.T) {
-		resp := makeNewReq(t, server.URL, http.MethodGet, nil, "")
+		resp , err:= makeNewReq(t, server.URL, http.MethodGet, nil, "")
+		if err != nil {
+			t.Fatal(err)
+		}
 		want := http.StatusOK
 		got := resp.StatusCode
 		assertStatusCode(t, want, got)
@@ -27,7 +30,10 @@ func TestHandleGetUserSecrets(t *testing.T) {
 	})
 	t.Run("Return 200 when token valid", func(t *testing.T) {
 		token := getAuthToken(t)
-		resp := makeNewReq(t, server.URL, http.MethodGet, nil, token)
+		resp, err := makeNewReq(t, server.URL, http.MethodGet, nil, token)
+		if err != nil {
+			t.Fatal(err)
+		}
 		want := http.StatusOK
 		got := resp.StatusCode
 		assertStatusCode(t, want, got)
