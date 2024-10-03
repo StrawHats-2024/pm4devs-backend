@@ -36,7 +36,6 @@ func New(app *app.App) *Secret {
 	}
 }
 
-
 func (s *Secret) Route(mux *http.ServeMux, mw *middleware.Middleware) {
 	mux.HandleFunc(GetUserSecretsRoute, mw.Authenticated(s.getUserSecrets))
 	mux.HandleFunc(CreateNewSecretRoute, mw.Authenticated(s.createNew))
