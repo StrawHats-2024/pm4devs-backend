@@ -5,11 +5,15 @@ import (
 	"time"
 
 	"pm4devs.strawhats/internal/models/core"
+	"pm4devs.strawhats/internal/models/users"
 	"pm4devs.strawhats/internal/xerrors"
 )
 
 type SecretsRepository interface {
 	GetByUserID(id int64) (*[]SecretRecord, *xerrors.AppError)
+	GetByUserEmail(email string) (*[]SecretRecord, *xerrors.AppError)
+	GetByGroupID(id int64) (*[]SecretRecord, *xerrors.AppError)
+	// GetByGroupName(name string) (*[]SecretRecord, *xerrors.AppError)
 	NewRecord(name, EncryptedData string, ownerID int64) (*SecretRecord, *xerrors.AppError)
 }
 
@@ -19,6 +23,57 @@ type Secrets struct {
 
 func Repository(db core.Queryable) SecretsRepository {
 	return &Secrets{DB: db}
+}
+func (s *Secrets) GetByGroupID(id int64) (*[]SecretRecord, *xerrors.AppError) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// SQL query to get secrets shared with the group
+	query := `
+		SELECT secrets.id, secrets.name, secrets.encrypted_data, secrets.created_at
+		FROM secrets
+		INNER JOIN shared_secrets_group ON shared_secrets_group.secret_id = secrets.id
+		WHERE shared_secrets_group.group_id = $1;
+	`
+
+	// Slice to hold the results
+	var secrets []SecretRecord
+
+	// Execute the query and iterate over the rows
+	rows, err := s.DB.QueryContext(ctx, query, id)
+	if err != nil {
+		return nil, xerrors.DatabaseError(err, "secrets.GetByGroupID")
+	}
+	defer rows.Close()
+
+	// Loop through the rows and scan the data into the SecretRecord slice
+	for rows.Next() {
+		var secret SecretRecord
+		if err := rows.Scan(&secret.ID, &secret.Name, &secret.EncryptedData, &secret.CreatedAt); err != nil {
+			return nil, xerrors.DatabaseError(err, "secrets.GetByGroupID.Scan")
+		}
+		secrets = append(secrets, secret)
+	}
+
+	// Check for any error that might have occurred during iteration
+	if err := rows.Err(); err != nil {
+		return nil, xerrors.DatabaseError(err, "secrets.GetByGroupID.Rows")
+	}
+
+	return &secrets, nil
+}
+
+// func (s *Secrets) GetByGroupName(name string) (*[]SecretRecord, *xerrors.AppError) {
+//
+// }
+
+func (s *Secrets) GetByUserEmail(email string) (*[]SecretRecord, *xerrors.AppError) {
+	userRepo := users.Users{DB: s.DB}
+	user, err := userRepo.GetByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	return s.GetByUserID(user.ID)
 }
 
 func (s *Secrets) NewRecord(name, encryptedData string, ownerID int64) (*SecretRecord, *xerrors.AppError) {
