@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"pm4devs.strawhats/internal/models/permissions"
+	"pm4devs.strawhats/internal/models/secrets"
 	"pm4devs.strawhats/internal/models/tokens"
 	"pm4devs.strawhats/internal/models/users"
 )
@@ -13,6 +14,7 @@ type Models struct {
 	Permissions permissions.PermissionsRepository
 	Tokens      tokens.TokensRepository
 	Users       users.UsersRepository
+	Secrets     secrets.SecretsRepository
 }
 
 func New(db *sql.DB) *Models {
