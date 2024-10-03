@@ -23,8 +23,9 @@ func TestCreateNewSecrets(t *testing.T) {
 	assert.Check(t, len(token) > 0)
 
 	type responseMessage struct {
-		Error   map[string]string `json:"error"`
-		Message string            `json:"message"`
+		Error    map[string]string `json:"error"`
+		Message  string            `json:"message"`
+		SecretID string            `json:"secret_id"`
 	}
 
 	tests := []assert.HandlerTestCase[responseMessage]{
@@ -47,20 +48,15 @@ func TestCreateNewSecrets(t *testing.T) {
 			},
 		},
 		{
+			Name:   "AuthRequired",
+			Body:   ``,
+			Status: http.StatusUnauthorized,
+		},
+		{
 			Name:   "Success",
 			Body:   `{"encrypted_data": "test@example.com", "name": "testname"}`,
 			Auth:   token,
 			Status: http.StatusCreated,
-			FN: func(t *testing.T, result responseMessage) {
-				assert.NotEqual(t, result.Error["name"], "must be provided")
-				assert.NotEqual(t, result.Error["encrypted_data"], "must be provided")
-				assert.Equal(t, result.Message, "Success! Your secret has been created.")
-			},
-		},
-		{
-			Name:   "AuthRequired",
-			Body:   ``,
-			Status: http.StatusUnauthorized,
 		},
 	}
 

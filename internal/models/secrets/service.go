@@ -10,7 +10,7 @@ import (
 
 type SecretsRepository interface {
 	GetByUserID(id int64) (*[]SecretRecord, *xerrors.AppError)
-	New(name, EncryptedData string, ownerID int64) (*SecretRecord, *xerrors.AppError)
+	NewRecord(name, EncryptedData string, ownerID int64) (*SecretRecord, *xerrors.AppError)
 }
 
 type Secrets struct {
@@ -21,7 +21,7 @@ func Repository(db core.Queryable) SecretsRepository {
 	return &Secrets{DB: db}
 }
 
-func (s *Secrets) New(name, encryptedData string, ownerID int64) (*SecretRecord, *xerrors.AppError) {
+func (s *Secrets) NewRecord(name, encryptedData string, ownerID int64) (*SecretRecord, *xerrors.AppError) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 

@@ -22,21 +22,28 @@ func (rest *Rest) WriteJSON(
 	status int,
 	data Envelope,
 ) {
+	// Always set the content type as JSON before any other operation
+	w.Header().Set("Content-Type", "application/json")
+
+	// Marshal the data to JSON
 	response, err := json.Marshal(data)
 
-	// If an error occurs here, WriteJSON could cause infinite recursion
+	// If an error occurs while marshalling, handle it before setting headers
 	if err != nil {
+		// Log the error using your error handling system
 		wrappedError := fmt.Errorf("%w: %v", xerrors.ErrServerInternal, err)
 		serverError := xerrors.ServerError(op, wrappedError)
 		rest.Logger.Error(serverError.Error())
 
-		w.Header().Set("Content-Type", "application/json")
+		// Since there was an error, set the status to 500 (Internal Server Error)
 		w.WriteHeader(http.StatusInternalServerError)
+
+		// Return a JSON response for the error, ensuring the content-type is still correct
 		w.Write([]byte(`{"error": "Internal server error"}`))
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	// Set the response status code and write the JSON response
 	w.WriteHeader(status)
 	w.Write(response)
 }

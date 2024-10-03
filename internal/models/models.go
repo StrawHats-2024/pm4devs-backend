@@ -22,5 +22,6 @@ func New(db *sql.DB) *Models {
 		Permissions: permissions.Repository(db),
 		Tokens:      tokens.Repository(db),
 		Users:       users.Repository(db),
+		Secrets: secrets.Repository(db),
 	}
 }
