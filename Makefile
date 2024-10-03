@@ -132,6 +132,18 @@ mig/up:
 	@echo 'Running up migrations...'
 	@migrate -path ./migrations -database ${DSN} up
 
+## mig/test/up: migrate to a specific version, or apply all migrations
+.PHONY: mig/test/up
+mig/test/up:
+	@echo 'Running up migrations...'
+	@migrate -path ./migrations -database ${TEST_DSN} up
+
+## mig/test/down: migrate to a specific version, or apply all migrations
+.PHONY: mig/test/down
+mig/test/down:
+	@echo 'Running down migration...'
+	@migrate -path ./migrations -database ${TEST_DSN} down
+
 ## mig/down: apply all down database migrations
 .PHONY: mig/down
 mig/down:

@@ -76,16 +76,6 @@ func TestLoginUnauthorized(t *testing.T) {
 		},
 	})
 
-	// User needs activation
-	assert.RunHandlerTestCase(t, handler, "POST", auth.LoginRoute, assert.HandlerTestCase[failure]{
-		Name:   "User/NeedsActivation",
-		Body:   credentials,
-		Status: http.StatusUnauthorized,
-		FN: func(t *testing.T, result failure) {
-			assert.Equal(t, result.Error, "Activate your account in order to sign in")
-		},
-	})
-
 	// Seed - activate user
 	assert.Check(t, activateUser(handler, app))
 

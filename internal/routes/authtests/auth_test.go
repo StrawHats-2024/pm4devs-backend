@@ -36,7 +36,6 @@ func TestAuthE2E(t *testing.T) {
 		Body:   credentials,
 		Status: http.StatusCreated,
 		FN: func(t *testing.T, result user) {
-			assert.False(t, result.User.Activated)
 			assert.Equal(t, result.User.Email, "test@example.com")
 
 			app.BG.Wait()

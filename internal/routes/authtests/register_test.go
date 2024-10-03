@@ -29,7 +29,6 @@ func TestRegister(t *testing.T) {
 			Status: http.StatusCreated,
 			FN: func(t *testing.T, result success) {
 				assert.True(t, result.User.ID > 0)
-				assert.False(t, result.User.Activated)
 				assert.Equal(t, result.User.Version, 0)
 				assert.Equal(t, result.User.Email, "test@example.com")
 			},

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -21,6 +22,7 @@ func createTestDB(t *testing.T, dsn string) *sql.DB {
 
 	// Cleanup the database
 	migrations := getMigrations(t, db, "down.sql")
+	reverseMigrations(migrations)
 	applyMigrations(t, db, migrations)
 
 	// Create the database
@@ -28,6 +30,11 @@ func createTestDB(t *testing.T, dsn string) *sql.DB {
 	applyMigrations(t, db, migrations)
 
 	return db
+}
+func reverseMigrations(migrations []string) {
+	for i, j := 0, len(migrations)-1; i < j; i, j = i+1, j-1 {
+		migrations[i], migrations[j] = migrations[j], migrations[i]
+	}
 }
 
 // ============================================================================
@@ -52,6 +59,7 @@ func connectToDB(t *testing.T, dsn string) *sql.DB {
 }
 
 // Gets the migration files in sorted alphabetical order
+// Gets the migration files sorted by numeric prefix
 func getMigrations(t *testing.T, db *sql.DB, suffix string) []string {
 	dir := findMigrations(t, db)
 
@@ -68,8 +76,24 @@ func getMigrations(t *testing.T, db *sql.DB, suffix string) []string {
 		}
 	}
 
-	sort.Strings(migrations)
+	// Sort migrations by numeric prefix
+	sort.Slice(migrations, func(i, j int) bool {
+		return extractMigrationNumber(migrations[i]) < extractMigrationNumber(migrations[j])
+	})
+
 	return migrations
+}
+
+// Extract the numeric prefix from a migration file name (e.g., "000001_create_users_table.up.sql")
+func extractMigrationNumber(filePath string) int {
+	fileName := filepath.Base(filePath)
+	parts := strings.SplitN(fileName, "_", 2)
+	if len(parts) > 0 {
+		if number, err := strconv.Atoi(parts[0]); err == nil {
+			return number
+		}
+	}
+	return 0 // Default to 0 if unable to extract a number
 }
 
 // Apply the migrations in order

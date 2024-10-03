@@ -122,6 +122,13 @@ http POST localhost:4000/v1/auth/login \
 
 ```
 http POST localhost:4000/v1/auth/logout \
+	"Authorization: Bearer <Authentication Token>"
+```
+
+`/v1/secrets/user` Get user secrets (authentication required)
+
+```
+http GET localhost:4000/v1/secrets/user \
 	"Authorization: Bearer <Authentication Token>
 ```
 
