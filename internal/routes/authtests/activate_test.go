@@ -8,15 +8,16 @@ import (
 	"pm4devs.strawhats/internal/assert"
 	"pm4devs.strawhats/internal/mocks"
 	"pm4devs.strawhats/internal/routes/auth"
+	"pm4devs.strawhats/internal/routes/utils"
 )
 
 func TestActivate(t *testing.T) {
 	assert.Integration(t)
 	app := mocks.App(t)
-	handler := authHandler(app)
+	handler := utils.AuthHandler(app)
 
 	// Seed - create user
-	assert.Check(t, registerUser(handler, `{"email": "test@example.com", "password": "password"}`))
+	assert.Check(t, utils.RegisterUser(handler, `{"email": "test@example.com", "password": "password"}`))
 
 	// Invalid Token
 	assert.RunHandlerTestCase[failure](t, handler, "PUT", auth.ActivateRoute, assert.HandlerTestCase[failure]{

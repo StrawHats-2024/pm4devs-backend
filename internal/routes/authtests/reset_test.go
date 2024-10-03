@@ -8,12 +8,13 @@ import (
 	"pm4devs.strawhats/internal/assert"
 	"pm4devs.strawhats/internal/mocks"
 	"pm4devs.strawhats/internal/routes/auth"
+	"pm4devs.strawhats/internal/routes/utils"
 )
 
 func TestReset(t *testing.T) {
 	assert.Integration(t)
 	app := mocks.App(t)
-	handler := authHandler(app)
+	handler := utils.AuthHandler(app)
 	credentials := `{"email": "test@example.com", "password": "password"}`
 
 	// Bad Request
@@ -31,10 +32,10 @@ func TestReset(t *testing.T) {
 	})
 
 	// Seed - create user
-	assert.Check(t, registerUser(handler, credentials))
+	assert.Check(t, utils.RegisterUser(handler, credentials))
 
 	// Seed – activate user
-	assert.Check(t, activateUser(handler, app))
+	assert.Check(t, utils.ActivateUser(handler, app))
 
 	// Success
 	assert.RunHandlerTestCase(t, handler, "POST", auth.ResetRoute, assert.HandlerTestCase[message]{

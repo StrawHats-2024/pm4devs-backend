@@ -7,6 +7,7 @@ import (
 	"pm4devs.strawhats/internal/assert"
 	"pm4devs.strawhats/internal/mocks"
 	"pm4devs.strawhats/internal/routes/auth"
+	"pm4devs.strawhats/internal/routes/utils"
 )
 
 // Tests error cases for login
@@ -14,7 +15,7 @@ func TestLoginValidation(t *testing.T) {
 	assert.Integration(t)
 
 	app := mocks.App(t)
-	handler := authHandler(app)
+	handler := utils.AuthHandler(app)
 
 	type failure struct {
 		Error map[string]string `json:"error"`
@@ -48,7 +49,7 @@ func TestLoginValidation(t *testing.T) {
 func TestLoginUnauthorized(t *testing.T) {
 	assert.Integration(t)
 	app := mocks.App(t)
-	handler := authHandler(app)
+	handler := utils.AuthHandler(app)
 
 	type success struct {
 		Token string `json:"token"`
@@ -64,7 +65,7 @@ func TestLoginUnauthorized(t *testing.T) {
 	})
 
 	// Seed – create user
-	assert.Check(t, registerUser(handler, credentials))
+	assert.Check(t, utils.RegisterUser(handler, credentials))
 
 	// Password does not match
 	assert.RunHandlerTestCase(t, handler, "POST", auth.LoginRoute, assert.HandlerTestCase[failure]{
@@ -77,7 +78,7 @@ func TestLoginUnauthorized(t *testing.T) {
 	})
 
 	// Seed - activate user
-	assert.Check(t, activateUser(handler, app))
+	assert.Check(t, utils.ActivateUser(handler, app))
 
 	// Success
 	assert.RunHandlerTestCase(t, handler, "POST", auth.LoginRoute, assert.HandlerTestCase[success]{

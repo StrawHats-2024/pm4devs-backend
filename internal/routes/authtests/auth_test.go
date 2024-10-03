@@ -1,25 +1,21 @@
 package auth
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
-	"pm4devs.strawhats/internal/app"
 	"pm4devs.strawhats/internal/assert"
 	"pm4devs.strawhats/internal/mocks"
 	"pm4devs.strawhats/internal/models/users"
 	"pm4devs.strawhats/internal/routes/auth"
-	"pm4devs.strawhats/internal/routes/middleware"
+	"pm4devs.strawhats/internal/routes/utils"
 )
 
 func TestAuthE2E(t *testing.T) {
 	assert.Integration(t)
 	app := mocks.App(t)
-	handler := authHandler(app)
+	handler := utils.AuthHandler(app)
 
 	// Shared credentials
 	var bearer string
@@ -125,22 +121,6 @@ func TestAuthE2E(t *testing.T) {
 // ============================================================================
 
 // Creates a complete Auth handler including middleware
-func authHandler(app *app.App) http.HandlerFunc {
-	handler := func() http.Handler {
-		mux := http.NewServeMux()
-
-		middleware := middleware.New(app)
-		auth := auth.New(app)
-		auth.Route(mux, middleware)
-
-		return middleware.User(mux)
-	}()
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		handler.ServeHTTP(w, r)
-	}
-}
-
 // Helper user type
 type user struct {
 	User users.User `json:"user"`
@@ -166,44 +146,3 @@ type failures struct {
 // ============================================================================
 
 // Helper to activate a user
-func activateUser(handler http.HandlerFunc, app *app.App) bool {
-	app.BG.Wait()
-	body := fmt.Sprintf(`{"token": "%s"}`, mocks.Mailer(app).WelcomeActivationToken)
-	return sendRequest(handler, "PUT", auth.ActivateRoute, body) == http.StatusOK
-}
-
-// Helper to login a user
-func loginUser(handler http.HandlerFunc, credentials string) string {
-	var result struct {
-		Token string `json:"token"`
-	}
-	sendRequestGetResult(handler, "POST", auth.LoginRoute, credentials, &result)
-	return result.Token
-}
-
-// Helper to create a user
-func registerUser(handler http.HandlerFunc, credentials string) bool {
-	statusCode := sendRequest(handler, "POST", auth.RegisterRoute, credentials)
-	return statusCode == http.StatusCreated
-}
-
-// Sends a request and returns the HTTP status
-func sendRequest(handler http.HandlerFunc, method, route, body string) int {
-	req := httptest.NewRequest(method, route, bytes.NewBufferString(body))
-	rr := httptest.NewRecorder()
-	handler.ServeHTTP(rr, req)
-	resp := rr.Result()
-	defer resp.Body.Close()
-	return resp.StatusCode
-}
-
-func sendRequestGetResult[T any](handler http.HandlerFunc, method, route, body string, dst *T) *T {
-	req := httptest.NewRequest(method, route, bytes.NewBufferString(body))
-	rr := httptest.NewRecorder()
-	handler.ServeHTTP(rr, req)
-	resp := rr.Result()
-	defer resp.Body.Close()
-
-	json.NewDecoder(resp.Body).Decode(&dst)
-	return dst
-}

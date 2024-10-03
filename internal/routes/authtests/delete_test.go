@@ -7,18 +7,19 @@ import (
 	"pm4devs.strawhats/internal/assert"
 	"pm4devs.strawhats/internal/mocks"
 	"pm4devs.strawhats/internal/routes/auth"
+	"pm4devs.strawhats/internal/routes/utils"
 )
 
 func TestDelete(t *testing.T) {
 	assert.Integration(t)
 	app := mocks.App(t)
-	handler := authHandler(app)
+	handler := utils.AuthHandler(app)
 	credentials := `{"email": "test@example.com", "password": "password"}`
 
 	// Seed – create user, activate user, login user
-	assert.Check(t, registerUser(handler, credentials))
-	assert.Check(t, activateUser(handler, app))
-	token := loginUser(handler, credentials)
+	assert.Check(t, utils.RegisterUser(handler, credentials))
+	assert.Check(t, utils.ActivateUser(handler, app))
+	token := utils.LoginUser(handler, credentials)
 	assert.Check(t, len(token) > 0)
 
 	// Auth Required

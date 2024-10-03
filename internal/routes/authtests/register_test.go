@@ -8,6 +8,7 @@ import (
 	"pm4devs.strawhats/internal/mocks"
 	"pm4devs.strawhats/internal/models/users"
 	"pm4devs.strawhats/internal/routes/auth"
+	"pm4devs.strawhats/internal/routes/utils"
 )
 
 const registerSuccessBody = `{"email": "test@example.com", "password": "password"}`
@@ -16,7 +17,7 @@ const registerSuccessBody = `{"email": "test@example.com", "password": "password
 func TestRegister(t *testing.T) {
 	assert.Integration(t)
 	app := mocks.App(t)
-	handler := authHandler(app)
+	handler := utils.AuthHandler(app)
 
 	type success struct {
 		User users.User `json:"user"`
@@ -48,7 +49,7 @@ func TestRegister(t *testing.T) {
 func TestRegisterValidation(t *testing.T) {
 	assert.Integration(t)
 	app := mocks.App(t)
-	handler := authHandler(app)
+	handler := utils.AuthHandler(app)
 
 	tests := []assert.HandlerTestCase[failures]{
 		{
@@ -73,10 +74,10 @@ func TestRegisterValidation(t *testing.T) {
 func TestRegisterFailure(t *testing.T) {
 	assert.Integration(t)
 	app := mocks.App(t)
-	handler := authHandler(app)
+	handler := utils.AuthHandler(app)
 
 	// Seed - create user
-	assert.Check(t, registerUser(handler, registerSuccessBody))
+	assert.Check(t, utils.RegisterUser(handler, registerSuccessBody))
 
 	tests := []assert.HandlerTestCase[failure]{
 		{

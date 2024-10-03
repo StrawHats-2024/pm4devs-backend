@@ -28,3 +28,9 @@ func secretsHandler(app *app.App) http.HandlerFunc {
 		handler.ServeHTTP(w, r)
 	}
 }
+
+// Helper failure type
+type failure struct {
+	Error string `json:"error"`
+}
+
