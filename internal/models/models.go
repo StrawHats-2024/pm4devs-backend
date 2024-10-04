@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 
+	"pm4devs.strawhats/internal/models/group"
 	"pm4devs.strawhats/internal/models/permissions"
 	"pm4devs.strawhats/internal/models/secrets"
 	"pm4devs.strawhats/internal/models/tokens"
@@ -15,6 +16,7 @@ type Models struct {
 	Tokens      tokens.TokensRepository
 	Users       users.UsersRepository
 	Secrets     secrets.SecretsRepository
+	Group       group.GroupRepository
 }
 
 func New(db *sql.DB) *Models {
@@ -22,6 +24,7 @@ func New(db *sql.DB) *Models {
 		Permissions: permissions.Repository(db),
 		Tokens:      tokens.Repository(db),
 		Users:       users.Repository(db),
-		Secrets: secrets.Repository(db),
+		Secrets:     secrets.Repository(db),
+		Group:       group.Repository(db),
 	}
 }
