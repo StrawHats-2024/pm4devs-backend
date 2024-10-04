@@ -138,7 +138,7 @@ func (g *Group) DeleteByGroupID(groupID int64) *xerrors.AppError {
 }
 
 // Returns no error if user already in group
-func (g *Group) AddUser(groupId, userId int64) *xerrors.AppError { 
+func (g *Group) AddUser(groupId, userId int64) *xerrors.AppError {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 

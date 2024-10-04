@@ -7,6 +7,7 @@ import (
 	"pm4devs.strawhats/internal/app"
 	"pm4devs.strawhats/internal/models/permissions"
 	"pm4devs.strawhats/internal/routes/auth"
+	"pm4devs.strawhats/internal/routes/group"
 	"pm4devs.strawhats/internal/routes/middleware"
 	"pm4devs.strawhats/internal/routes/secret"
 )
@@ -19,11 +20,12 @@ func Mux(app *app.App) http.Handler {
 	middleware := middleware.New(app)
 	auth := auth.New(app)
 	secrets := secret.New(app)
+	group := group.New(app)
 
 	// Register
 	auth.Route(mux, middleware)
 	secrets.Route(mux, middleware)
-
+	group.Route(mux, middleware)
 	// Example permission check
 	mux.Handle(
 		"GET /v1/debug/vars",

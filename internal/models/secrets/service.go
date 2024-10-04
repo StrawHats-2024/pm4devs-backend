@@ -2,6 +2,9 @@ package secrets
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
+	"net/http"
 	"time"
 
 	"pm4devs.strawhats/internal/models/core"
@@ -15,6 +18,9 @@ type SecretsRepository interface {
 	GetByGroupID(id int64) (*[]SecretRecord, *xerrors.AppError)
 	// GetByGroupName(name string) (*[]SecretRecord, *xerrors.AppError)
 	NewRecord(name, EncryptedData string, ownerID int64) (*SecretRecord, *xerrors.AppError)
+	Delete(secretID int64) *xerrors.AppError
+	Update(secretID int64, newName, newEncryptedData string) *xerrors.AppError
+	GetSecretByID(secretID int64) (*SecretRecord, *xerrors.AppError)
 }
 
 type Secrets struct {
@@ -24,6 +30,7 @@ type Secrets struct {
 func Repository(db core.Queryable) SecretsRepository {
 	return &Secrets{DB: db}
 }
+
 func (s *Secrets) GetByGroupID(id int64) (*[]SecretRecord, *xerrors.AppError) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -142,4 +149,79 @@ func (s *Secrets) GetByUserID(userID int64) (*[]SecretRecord, *xerrors.AppError)
 
 	// Return the slice of secret records
 	return &secrets, nil
+}
+
+// Delete a secret by secret ID and owner ID
+func (s *Secrets) Delete(secretID int64) *xerrors.AppError {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+		DELETE FROM secrets
+		WHERE id = $1;
+	`
+
+	result, err := s.DB.ExecContext(ctx, query, secretID)
+	if err != nil {
+		return xerrors.DatabaseError(err, "secrets.Delete")
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return xerrors.DatabaseError(err, "secrets.Delete.RowsAffected")
+	}
+
+	if rowsAffected == 0 {
+		return xerrors.DatabaseError(fmt.Errorf("No secret found with id: %d", secretID),
+			"secrets.Delete")
+	}
+
+	return nil
+}
+
+// Update a secret by secret ID
+func (s *Secrets) Update(secretID int64, newName, newEncryptedData string) *xerrors.AppError {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+		UPDATE secrets
+		SET name = $1, encrypted_data = $2, updated_at = NOW()
+		WHERE id = $3;
+	`
+
+	_, err := s.DB.ExecContext(ctx, query, newName, []byte(newEncryptedData), secretID)
+	if err != nil {
+		return xerrors.DatabaseError(err, "secrets.Update")
+	}
+
+	return nil
+}
+
+func (s *Secrets) GetSecretByID(secretID int64) (*SecretRecord, *xerrors.AppError) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// Prepare the SQL query to get the secret by its ID
+	query := `
+		SELECT id, name, encrypted_data, owner_id, created_at
+		FROM secrets
+		WHERE id = $1;
+	`
+
+	// Create a SecretRecord instance to hold the result
+	var secret SecretRecord
+
+	// Execute the query and scan the result into the secret struct
+	err := s.DB.QueryRowContext(ctx, query, secretID).Scan(
+		&secret.ID, &secret.Name, &secret.EncryptedData, &secret.OwnerID, &secret.CreatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, xerrors.ClientError(http.StatusNotFound, fmt.Sprintf("No secret found with id: %d", secretID), "secrets.GetSecretByID", fmt.Errorf("Secret not found with id: %d", secretID))
+		}
+		return nil, xerrors.DatabaseError(err, "secrets.GetSecretByID")
+	}
+
+	return &secret, nil
 }

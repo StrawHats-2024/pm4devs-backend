@@ -1,413 +1,320 @@
-# Go Rest Starter
-A Go REST API starter template with authentication, permissions, email, and more 🚀
+# Secrets API Documentation
 
-This starter template provides the following features to build on:
-* 👋 Authentication with stateful tokens
-* 💂‍♂️ Authorization with roles (by default `admin` and `superadmin`)
-* 👀 Middleware for authentication, permission checks, and panic recovery
-* 📧 Emails for welcoming new users and resetting passwords
-* 🔁 Graceful shutdown that waits for background tasks to finish
-* 🧪 Testing package makes it easy to write integration tests (see [TestAuthE2E](https://github.com/jtbergman/go-rest-starter/blob/main/internal/routes/auth/auth_test.go))
-* ⏰ Centralized error handling – always return `ServerError` or `ClientError` and send it with `rest.Error(err)`
+**Base URL:** `/v1/secrets`
 
-## Get Started
+**Authentication:** All routes require authentication via a valid JWT token in the Authorization header (e.g., `Authorization: Bearer <token>`), except when stated otherwise.
 
-Do a bulk find and replace for `go-rest-starter.jtbergman.me` and replace it with your desired module name. 
+## Endpoints:
 
-### Env
+### 1. Create a Secret
 
-Create a `.env` file with this format. Both Docker and Make rely on these values. [SMTP](http://mailtrap.io) optional for `local`. 
+**Endpoint:** `POST /v1/secrets`
 
-```env
-# Env: local | dev | prod
-# 
-# local will log email data to STDOUT, SMTP not required
-ENV="local"
+**Description:** Creates a new secret entry for the authenticated user.
 
-# Server
-PORT=4000
-
-# Docker
-#
-# PROJECT_NAME is the group name used by Docker
-PROJECT_NAME="go-rest-starter"
-
-# Postgres
-#
-# Used to create DSN for `make run`. This data persists after stop.
-DB_NAME="postgres"
-DB_USER="postgres"
-DB_PASSWORD="password"
-
-# Postgres Tests
-#
-# Used to create DSN for `make tests`. This data is not persisted after stop.
-TEST_DB_NAME="tests"
-TEST_DB_USER="tests"
-TEST_DB_PASSWORD="password"
-
-# SMTP
-#
-# These values are provided by SMTP service, can skip while using local
-SMTP_HOST=""
-SMTP_PORT=25
-SMTP_USERNAME=""
-SMTP_PASSWORD=""
-SMTP_SENDER="Go Rest Starter <no-reply@go-rest-starter.com>"
-```
-
-### Make
-
-To run the application, just run `make run`. Alternatively, run `make` to see all the commands.
-
-```
-Usage:
-  # These automatically start the database and apply migrations
-  run                    run API
-  tests                  run tests
-  tests/short            run tests skipping integration
-  tests/cover            run tests with code coverage
-
-  # Manually start and stop the database
-  db/start               start the API database
-  db/start/tests         start the Tests database
-  db/stop                stop the API database
-  db/stop/tests          stop the Tests database
-
-  # Connect to the database to inspect with SQL
-  sql                    connect to the API database with psql
-  sql/tests              connect to the Tests database with psql
-
-  # Manage databae migrations (requires go-migrate)
-  mig/new name=$1        create a new database migration
-  mig/up                 migrate to a specific version, or apply all migrations
-  mig/down               apply all down database migrations
-  mig/force version=$1   force the database to a migration version
-
-  # Count the lines of code in your application
-  util/loc               lists the total lines of code
-
-  # Build the app, check the version (date+git hash)
-  build                  build the API
-  version                Output version of current binary
-```
-
-## Routes
-The supported routes are demonstrated using [HTTPie](https://httpie.io) syntax.
-
-`/v1/auth/register` Create a user with an email and password.
-
-```
-http POST localhost:4000/v1/auth/register \
-	email="test@example.com" \
-	password="password"
-```
-
-`/v1/auth/activate` Activate a user using the activation token (see previous logs)
-
-```
-http PUT localhost:4000/v1/auth/activate \
-	token="<Activation Token (See Server Logs)>"
-```
-
-`/v1/auth/login` Login to get an authentication token.
-
-```
-http POST localhost:4000/v1/auth/login \
-	email="test@example.com" \
-	password="password"
-```
-
-`/v1/auth/logout` Logout your user (authentication required)
-
-```
-http POST localhost:4000/v1/auth/logout \
-	"Authorization: Bearer <Authentication Token>"
-```
-
-`/v1/secrets/user` Get user secrets (authentication required)
-
-```
-http GET localhost:4000/v1/secrets/user \
-	"Authorization: Bearer <Authentication Token>
-```
-
-`/v1/auth/rest` request and create new passwords
-
-```
-# Request Reset
-http POST localhost:4000/v1/auth/reset \
-	email="test@example.com"
-
-# Rest with token (see server logs)
-http PUT localhost:4000/v1/auth/reset \
-	token="<Reset Token (See Server Logs)" \
-	password="pa55word"
-```
-
-`/v1/auth/delete` Delete your account (authentication required)
-
-```
-http POST localhost:4000/v1/auth/delete \
-	email="test@example.com" \
-	password="pa55word" \
-	"Authorization: Bearer <New Authentication Token>
-```
-
-`/v1/debug/vars` Check server metrics (admin user required)
-
-```bash
-# Create a user, activate, and login
-$ http localhost:4000/v1/auth/register email="test@example.com" password="password"
-$ http PUT localhost:4000/v1/auth/activate token=<Activation Token (See Server Logs)>
-$ http POST localhost:4000/v1/auth/login email="test@example.com" password="password"
-
-# You cannot see /v1/debug/vars
-$ http localhost:4000/v1/debug/vars "Authorization: Bearer <Login Token>"
-
-# Connect to database, grant admin 
-$ make sql
-> SELECT * FROM users;
-> SELECT * FROM permissions;
-> INSERT INTO user_permissions (user_id, permission_id) VALUES (1, 1);
-
-# Now you can
-$ http localhost:4000/v1/debug/vars "Authorization: Bearer <Login Token>"
-```
-
-## Adding Routes
-
-To define new routes, create a new package in `internal/routes`. 
-
-A route package should specify its dependencies with a struct using interfaces where possible.
-
-```go
-// Encapsulates the Application dependencies required by routes
-type Auth struct {
-	bg     app.Backgrounder
-	logger xlogger.Logger
-	mailer mailer.Mailer
-	rest   *rest.Rest
-	tokens tokens.TokensRepository
-	users  users.UsersRepository
+**Request Body:**
+```json
+{
+  "name": "string",                 // Required, name of the secret (e.g., "Bank Account")
+  "encrypted_data": "string"        // Required, the encrypted value (e.g., an encrypted password)
 }
 ```
 
-Create a `New` function that takes the `App` dependencies type and initializes itself.
+**Responses:**
 
-```go
-func New(app *app.App) *Auth {
-	return &Auth{
-		bg:     app.BG,
-		logger: app.Logger,
-		mailer: app.Mailer,
-		rest:   app.Rest,
-		tokens: app.Models.Tokens,
-		users:  app.Models.Users,
-	}
+- **201 Created**
+```json
+{
+  "message": "Success! Your secret has been created.",
+  "secret_id": "integer"        // The ID of the newly created secret
 }
 ```
 
-Define a `Route` function with the following signature and register your routes.
-
-```go
-func (auth *Auth) Route(mux *http.ServeMux, mw *middleware.Middleware) {
-	mux.HandleFunc(ActivateRoute, auth.Activate)
-
-	mux.HandleFunc(DeleteRoute, mw.Authenticated(auth.Delete))
-
-	mux.HandleFunc(LoginRoute, auth.Login)
-
-	mux.HandleFunc(LogoutRoute, mw.Authenticated(auth.Logout))
-
-	mux.HandleFunc(RegisterRoute, auth.Register)
-
-	mux.HandleFunc(ResetRoute, auth.Reset)
+- **422 Unprocessable Entity**
+```json
+{
+  "error": {
+    "name": "must be provided",                 // If 'name' is missing
+    "encrypted_data": "must be provided"        // If 'encrypted_data' is missing
+  }
 }
 ```
 
-I prefer to use the `switch r.Method` approach when defining my routes.
+- **401 Unauthorized**
+  - If the user is not authenticated or token is invalid.
 
-```go
-const ResetRoute = "/v1/auth/reset"
+### 2. Retrieve a Secret
 
-func (app *Auth) Reset(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		http.ServeFile(w, r, "static/reset.html")
+**Endpoint:** `GET /v1/secrets`
 
-	case "POST":
-		app.resetPost(w, r)
+**Description:** Retrieves a secret by its ID for the authenticated user.
 
-	case "PUT":
-		app.resetPut(w, r)
-
-	default:
-		app.rest.MethodNotAllowed(w, r, "GET, POST, PUT")
-	}
+**Request Body:**
+```json
+{
+  "secret_id": 1        // Required, ID of the secret to retrieve
 }
 ```
 
-## Writing Route Handlers
+**Responses:**
 
-Route handlers are defined on the dependencies struct (i.e. `Auth`). 
-
-The `Rest` dependency makes it easy to read JSON, write JSON, and handle errors.
-
-```go
-func (auth *Auth) registerPost(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-
-	// Parse request
-	if err := auth.rest.ReadJSON(w, r, "auth.registerPost", &input); err != nil {
-		auth.rest.Error(w, err)
-		return
-	}
-
-	// Create user
-	user, err := auth.users.New(input.Email, input.Password)
-	if err != nil {
-		auth.rest.Error(w, err)
-		return
-	}
-
-	// Insert user
-	if err := auth.users.Insert(user); err != nil {
-		if err.Matches(xerrors.ErrUniqueViolation) {
-			err.Data = "That email is already taken"
-		}
-		auth.rest.Error(w, err)
-		return
-	}
-	
-	// ...
+- **200 OK**
+```json
+{
+  "message": "Success!",
+  "data": {
+    "secret_id": "integer",
+    "name": "string",
+    "encrypted_data": "string",
+    "owner_id": "integer"
+  }
 }
 ```
 
-## Accessing the Database
-
-To interact with the database, create a new package in `internal/models`
-
-Create a file named `service.go` that defines and implements an interface.
-
-```go
-// Defines a mockable interface for user operations
-type UsersRepository interface {
-	Delete(user *User) (int64, *xerrors.AppError)
-	GetByEmail(email string) (*User, *xerrors.AppError)
-	GetByToken(plaintext string) (*User, *xerrors.AppError)
-	Insert(user *User) *xerrors.AppError
-	New(email, plaintext string) (*User, *xerrors.AppError)
-	Update(user *User) *xerrors.AppError
+- **422 Unprocessable Entity**
+```json
+{
+  "error": {
+    "secret_id": "must be provided"    // If 'secret_id' is missing or invalid
+  }
 }
 ```
 
-Create a concrete instance that depends on `core.Queryable`. This allows the same service to use transactions and `*sql.DB` without additional code.
+- **401 Unauthorized**
+  - If the user does not have permission to access the secret.
 
-```go
-// Provides access to User database methods
-type Users struct {
-	DB core.Queryable
+### 3. Update a Secret
+
+**Endpoint:** `PATCH /v1/secrets`
+
+**Description:** Updates an existing secret for the authenticated user.
+
+**Request Body:**
+```json
+{
+  "secret_id": 1,                // Required, ID of the secret to update
+  "name": "newname",             // Required, updated name of the secret
+  "encrypted_data": "newdata"    // Required, updated encrypted data
 }
 ```
 
-Provide a `Repository` method to make service initialization consistent.
+**Responses:**
 
-```go
-func Repository(db core.Queryable) UsersRepository {
-	return &Users{DB: db}
+- **200 OK**
+```json
+{
+  "message": "Success!"
 }
 ```
 
-Use `core.RowsAffected` and `xerrors.DatabaseError` to simplify error handling.
-
-```go
-// Deletes a user
-func (m Users) Delete(user *User) (int64, *xerrors.AppError) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	result, err := m.DB.ExecContext(ctx, `DELETE FROM users WHERE id = $1`, user.ID)
-	if err != nil {
-		return 0, xerrors.DatabaseError(err, "users.Delete")
-	}
-
-	return core.RowsAffected(result, "users.Delete")
+- **422 Unprocessable Entity**
+```json
+{
+  "error": {
+    "secret_id": "must be provided",        // If 'secret_id' is invalid or missing
+    "name": "must be provided",             // If 'name' is missing
+    "encrypted_data": "must be provided"    // If 'encrypted_data' is missing
+  }
 }
 ```
 
-## Writing Tests
-
-This template includes helpers for writing integration test. To create an `App` with mocked dependencies, just call `mocks.App()`. You can then easily create a test handler using the `Routes` method from your package. For an example, see `auth_test.go`. Use functions from the `assert` package to easily write integration tests. Example:
-
-```go
-func TestDelete(t *testing.T) {
-	// Mark an integration test (skipped with make tests/short)
-	assert.Integration(t)
-
-	// Easily create dependencies
-	app := mocks.App(t)
-	handler := authHandler(app)
-	credentials := `{"email": "test@example.com", "password": "password"}`
-
-	// Seed – create user, activate user, login user
-	assert.Check(t, registerUser(handler, credentials))
-	assert.Check(t, activateUser(handler, app))
-	token := loginUser(handler, credentials)
-	assert.Check(t, len(token) > 0)
-
-	// Auth Required
-	assert.RunHandlerTestCase[failures](t, handler, "POST", DeleteRoute, assert.HandlerTestCase[failures]{
-		Name:   "Delete/AuthRequired",
-		Body:   credentials,
-		Status: http.StatusUnauthorized,
-	})
-
-	// User Not Found
-	assert.RunHandlerTestCase[failures](t, handler, "POST", DeleteRoute, assert.HandlerTestCase[failures]{
-		Name:   "Delete/UserNotFound",
-		Body:   `{"email": "test2@example.com", "password": "password"}`,
-		Auth:   token,
-		Status: http.StatusNotFound,
-	})
-
-	// Credentials Invalid
-	assert.RunHandlerTestCase[failures](t, handler, "POST", DeleteRoute, assert.HandlerTestCase[failures]{
-		Name:   "Delete/CredentialsInvalid",
-		Body:   `{"email": "test@example.com", "password": "pa55word"}`,
-		Auth:   token,
-		Status: http.StatusUnauthorized,
-	})
-
-	// Success
-	assert.RunHandlerTestCase[message](t, handler, "POST", DeleteRoute, assert.HandlerTestCase[message]{
-		Name:   "Delete/CredentialsInvalid",
-		Body:   credentials,
-		Auth:   token,
-		Status: http.StatusOK,
-		FN: func(t *testing.T, result message) {
-			assert.Equal(t, result.Message, "Your account has been deleted")
-		},
-	})
+- **401 Unauthorized**
+```json
+{
+  "message": "Only owner can update a secret"
 }
 ```
 
-If you have a failing test, use the following to inspect server logs from the test
-```go
-mocks.Logger(app).Begin()
+### 4. Delete a Secret
 
-assert.RunHandlerTestCase[message](t, handler, "POST", DeleteRoute, assert.HandlerTestCase[message]{
-		Name:   "Delete/CredentialsInvalid",
-		Body:   credentials,
-		Auth:   token,
-		Status: http.StatusOK,
-		FN: func(t *testing.T, result message) {
-			assert.Equal(t, result.Message, "Your account has been deleted")
-		},
-	})
+**Endpoint:** `DELETE /v1/secrets`
 
-mocks.Logger(app).End()
+**Description:** Deletes an existing secret for the authenticated user.
+
+**Request Body:**
+```json
+{
+  "secret_id": 1     // Required, ID of the secret to delete
+}
 ```
+
+**Responses:**
+
+- **204 No Content**
+  - No response body.
+
+- **422 Unprocessable Entity**
+```json
+{
+  "error": {
+    "secret_id": "must be provided"    // If 'secret_id' is missing or invalid
+  }
+}
+```
+
+- **401 Unauthorized**
+```json
+{
+  "message": "Only owner can delete a secret"
+}
+```
+
+# Group API Documentation
+
+## 1. Create New Group
+
+- **Endpoint:** `/v1/groups`
+- **Method:** POST
+- **Authentication:** Required
+- **Description:** Creates a new group.
+
+### Request Body:
+
+```json
+{
+  "group_name": "string"
+}
+```
+
+- `group_name`: Must be a string of at least 5 characters.
+
+### Responses:
+
+#### 201 Created:
+
+```json
+{
+  "Message": "Success!",
+  "data": {
+    "group_name": "string",
+    "id": "int64"
+  }
+}
+```
+
+#### 400 Bad Request:
+- Invalid or missing body (e.g., "group_name" key missing).
+
+#### 422 Unprocessable Entity:
+- Group name too short (less than 5 characters).
+- Validation error for the request body format.
+
+#### 409 Conflict:
+- If the group name already exists.
+
+## 2. Get Group by ID
+
+- **Endpoint:** `/v1/groups`
+- **Method:** GET
+- **Authentication:** Required
+- **Description:** Retrieves a group by its ID.
+
+### Request Body:
+
+```json
+{
+  "group_id": "int64"
+}
+```
+
+- `group_id`: Must be a positive integer.
+
+### Responses:
+
+#### 200 OK:
+
+```json
+{
+  "Message": "Success!",
+  "Data": {
+    "id": "int64",
+    "name": "string",
+    "creator_id": "int64",
+    "created_at": "timestamp"
+  }
+}
+```
+
+#### 400 Bad Request:
+- Missing body or incorrect format.
+
+#### 422 Unprocessable Entity:
+- If group_id is invalid or zero.
+
+#### 404 Not Found:
+- If the group does not exist.
+
+## 3. Update Group
+
+- **Endpoint:** `/v1/groups`
+- **Method:** PATCH
+- **Authentication:** Required
+- **Description:** Updates the name of an existing group. Only the group creator can update the group name.
+
+### Request Body:
+
+```json
+{
+  "new_group_name": "string",
+  "group_id": "int64"
+}
+```
+
+- `new_group_name`: Must be a string of at least 5 characters.
+- `group_id`: Must be a positive integer.
+
+### Responses:
+
+#### 200 OK:
+
+```json
+{
+  "Message": "Success!"
+}
+```
+
+#### 400 Bad Request:
+- Missing or invalid body.
+
+#### 422 Unprocessable Entity:
+- Group name is too short, or group ID is invalid.
+
+#### 401 Unauthorized:
+- If the user is not the owner of the group.
+
+#### 404 Not Found:
+- If the group does not exist.
+
+## 4. Delete Group
+
+- **Endpoint:** `/v1/groups`
+- **Method:** DELETE
+- **Authentication:** Required
+- **Description:** Deletes a group by its ID. Only the creator of the group can delete it.
+
+### Request Body:
+
+```json
+{
+  "group_id": "int64"
+}
+```
+
+- `group_id`: Must be a positive integer.
+
+### Responses:
+
+#### 204 No Content:
+- Success with no body content returned.
+
+#### 400 Bad Request:
+- Invalid or missing body.
+
+#### 422 Unprocessable Entity:
+- If group_id is invalid or zero.
+
+#### 401 Unauthorized:
+- If the user is not the creator of the group.
+
+#### 404 Not Found:
+- If the group does not exist.
