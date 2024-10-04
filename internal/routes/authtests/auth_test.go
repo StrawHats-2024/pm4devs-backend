@@ -123,7 +123,7 @@ func TestAuthE2E(t *testing.T) {
 // Creates a complete Auth handler including middleware
 // Helper user type
 type user struct {
-	User users.User `json:"user"`
+	User users.UserRecord `json:"user"`
 }
 
 // Helper success type

@@ -20,7 +20,7 @@ func TestRegister(t *testing.T) {
 	handler := utils.AuthHandler(app)
 
 	type success struct {
-		User users.User `json:"user"`
+		User users.UserRecord `json:"user"`
 	}
 
 	tests := []assert.HandlerTestCase[success]{

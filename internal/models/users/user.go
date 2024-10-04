@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
 	"pm4devs.strawhats/internal/validator"
 	"pm4devs.strawhats/internal/xerrors"
-	"golang.org/x/crypto/bcrypt"
 )
 
 var ErrDuplicateEmail = errors.New("duplicate email")
@@ -17,9 +17,10 @@ var ErrDuplicateEmail = errors.New("duplicate email")
 // ============================================================================
 
 // Encapsulates the database properties of a user. The
-type User struct {
+type UserRecord struct {
 	ID        int64     `json:"id"`
 	Email     string    `json:"email"`
+	Name      string    `json:"name"`
 	Password  string    `json:"-"`
 	Activated bool      `json:"activated"`
 	CreatedAt time.Time `json:"created_at"`
@@ -27,7 +28,7 @@ type User struct {
 }
 
 // Create a new User
-func new(email, plaintext string) (*User, *xerrors.AppError) {
+func new(email, plaintext string) (*UserRecord, *xerrors.AppError) {
 	v := validator.New()
 	v.IsEmail(email, "email", "is invalid")
 	v.Check(len(plaintext) >= 8, "password", "must be at least 8 characters")
@@ -36,7 +37,7 @@ func new(email, plaintext string) (*User, *xerrors.AppError) {
 		return nil, err
 	}
 
-	user := &User{Email: email}
+	user := &UserRecord{Email: email}
 	err := user.SetPassword(plaintext)
 	if err != nil {
 		return nil, err
@@ -46,7 +47,7 @@ func new(email, plaintext string) (*User, *xerrors.AppError) {
 }
 
 // Set a user's password
-func (u *User) SetPassword(plaintext string) *xerrors.AppError {
+func (u *UserRecord) SetPassword(plaintext string) *xerrors.AppError {
 	hash, err := hash(plaintext, "models.SetPassword")
 
 	if err != nil {
@@ -58,7 +59,7 @@ func (u *User) SetPassword(plaintext string) *xerrors.AppError {
 }
 
 // Checks a user's password
-func (user *User) PasswordMatches(plaintext string) (bool, *xerrors.AppError) {
+func (user *UserRecord) PasswordMatches(plaintext string) (bool, *xerrors.AppError) {
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(plaintext))
 	if err != nil {
 		switch {
@@ -80,10 +81,10 @@ func (user *User) PasswordMatches(plaintext string) (bool, *xerrors.AppError) {
 // ============================================================================
 
 // An empty User
-var AnonymousUser = &User{}
+var AnonymousUser = &UserRecord{}
 
 // Checks if a user is anonymous
-func (u *User) IsAnonymous() bool {
+func (u *UserRecord) IsAnonymous() bool {
 	return u == AnonymousUser
 }
 

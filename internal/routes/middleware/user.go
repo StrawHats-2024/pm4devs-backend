@@ -68,8 +68,8 @@ const userContextKey = contextKey("user")
 // Retrieves the User struct from the request context. This value is set by
 // Authentication middleware and can be trusted. However, you should always
 // check for user.IsAnonymous().
-func ContextGetUser(r *http.Request) *users.User {
-	user, ok := r.Context().Value(userContextKey).(*users.User)
+func ContextGetUser(r *http.Request) *users.UserRecord {
+	user, ok := r.Context().Value(userContextKey).(*users.UserRecord)
 
 	if !ok {
 		panic("missing user value in request context")
@@ -79,7 +79,7 @@ func ContextGetUser(r *http.Request) *users.User {
 }
 
 // Returns a new copy of the request with the User struct added to the context
-func contextSetUser(r *http.Request, user *users.User) *http.Request {
+func contextSetUser(r *http.Request, user *users.UserRecord) *http.Request {
 	ctx := context.WithValue(r.Context(), userContextKey, user)
 	return r.WithContext(ctx)
 }

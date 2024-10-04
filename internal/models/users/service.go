@@ -15,12 +15,12 @@ import (
 
 // Defines a mockable interface for user operations
 type UsersRepository interface {
-	Delete(user *User) (int64, *xerrors.AppError)
-	GetByEmail(email string) (*User, *xerrors.AppError)
-	GetByToken(plaintext string) (*User, *xerrors.AppError)
-	Insert(user *User) *xerrors.AppError
-	New(email, plaintext string) (*User, *xerrors.AppError)
-	Update(user *User) *xerrors.AppError
+	Delete(user *UserRecord) (int64, *xerrors.AppError)
+	GetByEmail(email string) (*UserRecord, *xerrors.AppError)
+	GetByToken(plaintext string) (*UserRecord, *xerrors.AppError)
+	Insert(user *UserRecord) *xerrors.AppError
+	New(email, plaintext string) (*UserRecord, *xerrors.AppError)
+	Update(user *UserRecord) *xerrors.AppError
 }
 
 func Repository(db core.Queryable) UsersRepository {
@@ -37,7 +37,7 @@ type Users struct {
 }
 
 // Create User
-func (Users) New(email, plaintext string) (*User, *xerrors.AppError) {
+func (Users) New(email, plaintext string) (*UserRecord, *xerrors.AppError) {
 	user, err := new(email, plaintext)
 
 	if err != nil {
@@ -57,7 +57,7 @@ func (Users) New(email, plaintext string) (*User, *xerrors.AppError) {
 // User.Activated
 // User.CreatedAt
 // User.Version
-func (m Users) Insert(user *User) *xerrors.AppError {
+func (m Users) Insert(user *UserRecord) *xerrors.AppError {
 	query := `
 		INSERT INTO users (email, password)
 		VALUES ($1, $2)
@@ -77,13 +77,13 @@ func (m Users) Insert(user *User) *xerrors.AppError {
 }
 
 // Gets the user by their email
-func (m Users) GetByEmail(email string) (*User, *xerrors.AppError) {
+func (m Users) GetByEmail(email string) (*UserRecord, *xerrors.AppError) {
 	query := `
 		SELECT id, email, password, activated, created_at, version
 		FROM users
 		WHERE email = $1
 	`
-	var user User
+	var user UserRecord
 	dest := []any{&user.ID, &user.Email, &user.Password, &user.Activated, &user.CreatedAt, &user.Version}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -97,7 +97,7 @@ func (m Users) GetByEmail(email string) (*User, *xerrors.AppError) {
 }
 
 // Gets the user from one of their tokens
-func (m Users) GetByToken(plaintext string) (*User, *xerrors.AppError) {
+func (m Users) GetByToken(plaintext string) (*UserRecord, *xerrors.AppError) {
 	query := `
 		SELECT users.id, users.email, users.password, users.activated, users.created_at, users.version
 		FROM users
@@ -106,7 +106,7 @@ func (m Users) GetByToken(plaintext string) (*User, *xerrors.AppError) {
 		WHERE tokens.hash = $1
 		AND tokens.expiry > $2
 	`
-	var user User
+	var user UserRecord
 	args := []any{tokens.Hash(plaintext), time.Now()}
 	dest := []any{&user.ID, &user.Email, &user.Password, &user.Activated, &user.CreatedAt, &user.Version}
 
@@ -129,7 +129,7 @@ func (m Users) GetByToken(plaintext string) (*User, *xerrors.AppError) {
 // email
 // password
 // activated
-func (m Users) Update(user *User) *xerrors.AppError {
+func (m Users) Update(user *UserRecord) *xerrors.AppError {
 	query := `
 		UPDATE users
 		SET email = $1, password = $2, activated = $3, version = version + 1
@@ -151,7 +151,7 @@ func (m Users) Update(user *User) *xerrors.AppError {
 }
 
 // Deletes a user
-func (m Users) Delete(user *User) (int64, *xerrors.AppError) {
+func (m Users) Delete(user *UserRecord) (int64, *xerrors.AppError) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
