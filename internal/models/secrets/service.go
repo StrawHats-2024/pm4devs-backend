@@ -15,8 +15,9 @@ import (
 type Permission string
 
 const (
-	ReadOnly  Permission = "read-only"
-	ReadWrite Permission = "read-write"
+	ReadOnly   Permission = "read-only"
+	ReadWrite  Permission = "read-write"
+	NOTALLOWED Permission = ""
 )
 
 type SecretsRepository interface {
@@ -34,6 +35,7 @@ type SecretsRepository interface {
 	UpdateUserPermission(secretID, userID int64, permission Permission) *xerrors.AppError
 	RevokeFromGroup(secretID, groupID int64) *xerrors.AppError
 	RevokeFromUser(secretID, userID int64) *xerrors.AppError
+	GetUserSecretPermission(userID int64, secretID int64) (Permission, *xerrors.AppError)
 }
 
 type Secrets struct {

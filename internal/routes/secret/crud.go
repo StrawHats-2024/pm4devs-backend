@@ -3,6 +3,7 @@ package secret
 import (
 	"net/http"
 
+	"pm4devs.strawhats/internal/models/secrets"
 	"pm4devs.strawhats/internal/rest"
 	"pm4devs.strawhats/internal/routes/middleware"
 	"pm4devs.strawhats/internal/validator"
@@ -51,8 +52,12 @@ func (app *Secret) get(w http.ResponseWriter, r *http.Request) {
 		app.rest.Error(w, err)
 		return
 	}
-	// TODO: update permission for when shared with groups or user
-	if currSecret.OwnerID != user.ID {
+	permission, err := app.secrets.GetUserSecretPermission(user.ID, input.SecretID)
+	if err != nil {
+		app.rest.Error(w, err)
+		return
+	}
+	if permission == secrets.NOTALLOWED {
 		app.rest.WriteJSON(w, "secrets.get", http.StatusUnauthorized, rest.Envelope{
 			"message": "Your not allowed",
 		})
@@ -86,12 +91,12 @@ func (app *Secret) update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := middleware.ContextGetUser(r)
-	currSecret, err := app.secrets.GetSecretByID(input.SecretID)
+	permission, err := app.secrets.GetUserSecretPermission(user.ID, input.SecretID)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
 	}
-	if currSecret.OwnerID != user.ID {
+	if permission != secrets.ReadWrite {
 		app.rest.WriteJSON(w, "secrets.update", http.StatusUnauthorized, rest.Envelope{
 			"message": "Only owner can update a secret",
 		})
