@@ -10,7 +10,7 @@ import (
 	"pm4devs.strawhats/internal/routes/utils"
 )
 
-func TestGetUpdateDelete(t *testing.T) {
+func TestCRUDSecrets(t *testing.T) {
 	assert.Integration(t)
 	app := mocks.App(t)
 	handler := secretsHandler(app)

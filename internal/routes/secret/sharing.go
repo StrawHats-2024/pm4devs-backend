@@ -191,12 +191,6 @@ func (app *Secret) updateGroupPermission(w http.ResponseWriter, r *http.Request)
 }
 
 func (app *Secret) updateUserPermission(w http.ResponseWriter, r *http.Request) {
-	// Ensure the method is PATCH
-	if r.Method != http.MethodPatch {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	// Set the response type to JSON
 	w.Header().Set("Content-Type", "application/json")
 

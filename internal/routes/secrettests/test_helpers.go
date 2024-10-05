@@ -1,7 +1,9 @@
 package secret
 
 import (
+	"bytes"
 	"net/http"
+	"net/http/httptest"
 
 	"pm4devs.strawhats/internal/app"
 	"pm4devs.strawhats/internal/routes/middleware"
@@ -29,8 +31,23 @@ func secretsHandler(app *app.App) http.HandlerFunc {
 	}
 }
 
+func sendAuthRequest(handler http.HandlerFunc, method, route, body, authToken string) int {
+	req := httptest.NewRequest(method, route, bytes.NewBufferString(body))
+
+	// If authToken is provided, set the Authorization header
+	if authToken != "" {
+		req.Header.Set("Authorization", "Bearer "+authToken)
+	}
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	resp := rr.Result()
+	defer resp.Body.Close()
+
+	return resp.StatusCode
+}
+
 // Helper failure type
 type failure struct {
 	Error string `json:"error"`
 }
-
