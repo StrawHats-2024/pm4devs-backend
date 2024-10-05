@@ -12,6 +12,13 @@ import (
 	"pm4devs.strawhats/internal/xerrors"
 )
 
+type Permission string
+
+const (
+	ReadOnly  Permission = "read-only"
+	ReadWrite Permission = "read-write"
+)
+
 type SecretsRepository interface {
 	GetByUserID(id int64) (*[]SecretRecord, *xerrors.AppError)
 	GetByUserEmail(email string) (*[]SecretRecord, *xerrors.AppError)
@@ -21,6 +28,12 @@ type SecretsRepository interface {
 	Delete(secretID int64) *xerrors.AppError
 	Update(secretID int64, newName, newEncryptedData string) *xerrors.AppError
 	GetSecretByID(secretID int64) (*SecretRecord, *xerrors.AppError)
+	ShareToGroup(secretID, groupID int64, permission Permission) *xerrors.AppError
+	ShareToUser(secretID, userID int64, permission Permission) *xerrors.AppError
+	UpdateGroupPermission(secretID, groupID int64, permission Permission) *xerrors.AppError
+	UpdateUserPermission(secretID, userID int64, permission Permission) *xerrors.AppError
+	RevokeFromGroup(secretID, groupID int64) *xerrors.AppError
+	RevokeFromUser(secretID, userID int64) *xerrors.AppError
 }
 
 type Secrets struct {

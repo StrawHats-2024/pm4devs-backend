@@ -99,6 +99,12 @@ func (app *Group) removeUser(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	if input.UserID == currGroup.CreatorID {
+		app.rest.WriteJSON(w, "group.removeUser", http.StatusBadRequest, rest.Envelope{
+			"Message": "Invalid user_id, trying to make create a member",
+		})
+		return
+	}
 	err = app.group.RemoveUser(input.GroupID, input.UserID)
 	if err != nil {
 		app.rest.Error(w, err)
