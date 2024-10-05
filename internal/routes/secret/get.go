@@ -25,6 +25,7 @@ func (app *Secret) getUserSecrets(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// TODO: Revision needed
 func (app *Secret) getGroupSecrets(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)

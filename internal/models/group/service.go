@@ -19,6 +19,7 @@ type GroupRepository interface {
 	NewRecord(name string, ownerID int64) (*GroupRecord, *xerrors.AppError)
 	AddUser(groupId, userId int64) *xerrors.AppError
 	RemoveUser(groupId, userId int64) *xerrors.AppError
+	GetGroupsByUserID(userID int64) ([]GroupRecord, *xerrors.AppError)
 }
 
 type Group struct {
