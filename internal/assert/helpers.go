@@ -45,6 +45,7 @@ type HandlerTestCase[T any] struct {
 	Status int
 	FN     HandlerTestFunc[T]
 	Method string
+	Route  string
 }
 
 func RunHandlerTestCase[T any](

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/http"
 	"time"
 
 	"pm4devs.strawhats/internal/models/core"
@@ -17,7 +18,7 @@ type GroupRepository interface {
 	DeleteByGroupID(groupID int64) *xerrors.AppError
 	NewRecord(name string, ownerID int64) (*GroupRecord, *xerrors.AppError)
 	AddUser(groupId, userId int64) *xerrors.AppError
-	RemoveUserIfExists(groupId, userId int64) *xerrors.AppError
+	RemoveUser(groupId, userId int64) *xerrors.AppError
 }
 
 type Group struct {
@@ -75,7 +76,7 @@ func (g *Group) GetByGroupID(id int64) (*GroupRecordWithUsers, *xerrors.AppError
 
 	// Second query to get users related to the group
 	queryUsers := `
-		SELECT u.id, u.email, u.name
+		SELECT u.id, u.email
 		FROM users u
 		JOIN group_members gm ON gm.user_id = u.id
 		WHERE gm.group_id = $1;
@@ -89,7 +90,7 @@ func (g *Group) GetByGroupID(id int64) (*GroupRecordWithUsers, *xerrors.AppError
 
 	for rows.Next() {
 		var user users.UserRecord
-		if err := rows.Scan(&user.ID, &user.Email, &user.Name); err != nil {
+		if err := rows.Scan(&user.ID, &user.Email); err != nil {
 			return nil, xerrors.DatabaseError(err, "group.GetByGroupID")
 		}
 		group.Users = append(group.Users, &user)
@@ -157,7 +158,7 @@ func (g *Group) AddUser(groupId, userId int64) *xerrors.AppError {
 	return nil
 }
 
-func (g *Group) RemoveUserIfExists(groupId, userId int64) *xerrors.AppError {
+func (g *Group) RemoveUser(groupId, userId int64) *xerrors.AppError {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -179,8 +180,12 @@ func (g *Group) RemoveUserIfExists(groupId, userId int64) *xerrors.AppError {
 	}
 
 	if rowsAffected == 0 {
-		return xerrors.DatabaseError(fmt.Errorf("No user in group with id: %d", userId),
-			"group.RemoveUserIfExists")
+		// return xerrors.DatabaseError(fmt.Errorf("No user in group with id: %d", userId),
+		// 	"group.RemoveUserIfExists")
+		xerrors.ClientError(http.StatusNotFound,
+			fmt.Sprintf("Invalid user_id=%d or group_id=%d", groupId, userId),
+			"group.RemoveUserIfExists",
+			fmt.Errorf("Invalid user or group"))
 	}
 
 	return nil

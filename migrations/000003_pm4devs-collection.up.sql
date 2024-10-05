@@ -3,7 +3,7 @@ BEGIN;
 -- Create the groups table
 CREATE TABLE IF NOT EXISTS groups (
     id bigserial PRIMARY KEY,
-    name text UNIQUE NOT NULL,
+    name text UNIQUE NOT NULL CHECK (name <> ''),
     creator_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at timestamp(0) with time zone NOT NULL DEFAULT NOW(),
     updated_at timestamp with time zone NOT NULL DEFAULT NOW()
