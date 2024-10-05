@@ -1,10 +1,12 @@
 package secret
 
 import (
+	"fmt"
 	"net/http"
 
 	"pm4devs.strawhats/internal/models/secrets"
 	"pm4devs.strawhats/internal/rest"
+	"pm4devs.strawhats/internal/routes/middleware"
 	"pm4devs.strawhats/internal/validator"
 )
 
@@ -71,6 +73,11 @@ func (app *Secret) shareToUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err := app.validateSecretOwnership(w, r, input.SecretID)
+	if err != nil {
+		return
+	}
+
 	// Call the method to share the secret with the user
 	if err := app.secrets.ShareToUser(input.SecretID, input.UserID, input.Permission); err != nil {
 		app.rest.Error(w, err)
@@ -117,6 +124,11 @@ func (app *Secret) shareToGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err := app.validateSecretOwnership(w, r, input.SecretID)
+	if err != nil {
+		return
+	}
+
 	// Call the method to share the secret with the group
 	if err := app.secrets.ShareToGroup(input.SecretID, input.GroupID, input.Permission); err != nil {
 		app.rest.Error(w, err)
@@ -159,6 +171,10 @@ func (app *Secret) updateGroupPermission(w http.ResponseWriter, r *http.Request)
 	v.Check(input.Permission == "read-only" || input.Permission == "read-write", "permission", "must be 'read-only' or 'read-write'")
 	if err := v.Valid("secrets.updateGroupPermission"); err != nil {
 		app.rest.Error(w, err)
+		return
+	}
+	err := app.validateSecretOwnership(w, r, input.SecretID)
+	if err != nil {
 		return
 	}
 
@@ -207,6 +223,10 @@ func (app *Secret) updateUserPermission(w http.ResponseWriter, r *http.Request) 
 		app.rest.Error(w, err)
 		return
 	}
+	err := app.validateSecretOwnership(w, r, input.SecretID)
+	if err != nil {
+		return
+	}
 
 	// Call the method to update the permission
 	if err := app.secrets.UpdateUserPermission(input.SecretID, input.UserID, input.Permission); err != nil {
@@ -248,6 +268,11 @@ func (app *Secret) revokeGroupPermission(w http.ResponseWriter, r *http.Request)
 	v.Check(input.GroupID > 0, "group_id", "must be provided")
 	if err := v.Valid("secrets.revokeGroupPermission"); err != nil {
 		app.rest.Error(w, err)
+		return
+	}
+
+	err := app.validateSecretOwnership(w, r, input.SecretID)
+	if err != nil {
 		return
 	}
 
@@ -293,6 +318,10 @@ func (app *Secret) revokeUserPermission(w http.ResponseWriter, r *http.Request) 
 		app.rest.Error(w, err)
 		return
 	}
+	err := app.validateSecretOwnership(w, r, input.SecretID)
+	if err != nil {
+		return
+	}
 
 	// Call the method to revoke the permission
 	if err := app.secrets.RevokeFromUser(input.SecretID, input.UserID); err != nil {
@@ -304,4 +333,21 @@ func (app *Secret) revokeUserPermission(w http.ResponseWriter, r *http.Request) 
 	app.rest.WriteJSON(w, "secret.revokeUserPermission", http.StatusOK, rest.Envelope{
 		"message": "Permission revoked successfully for the user.",
 	})
+}
+
+func (app *Secret) validateSecretOwnership(w http.ResponseWriter, r *http.Request, secretID int64) error {
+
+	currUser := middleware.ContextGetUser(r)
+	currsecret, err := app.secrets.GetSecretByID(secretID)
+	if err != nil {
+		app.rest.Error(w, err)
+		return fmt.Errorf("error")
+	}
+	if currUser.ID != currsecret.OwnerID {
+		app.rest.WriteJSON(w, "secrets.validateSecretOwnership", http.StatusUnauthorized, rest.Envelope{
+			"message": "Only secret owner can manage access",
+		})
+		return fmt.Errorf("error")
+	}
+	return nil
 }
