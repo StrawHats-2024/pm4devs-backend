@@ -1,4 +1,131 @@
-# Secrets API Documentation
+# API Documentation
+
+## 1. Register User
+
+### Endpoint: `/v1/auth/register`
+
+### Method: POST
+
+### Description: 
+This endpoint allows you to create a new user account by providing an email and password.
+
+### Request:
+
+#### Headers: 
+None required.
+
+#### Body:
+- `email` (string, required): The email address for the new user. Example: "test@example.com"
+- `password` (string, required): The password for the new user. Example: "password"
+
+### Response:
+
+#### Status 201: Successfully registered the user.
+
+Body:
+```json
+{
+  "message": "User successfully registered."
+}
+```
+
+#### Status 422: Validation errors (if the input is invalid).
+
+Body:
+```json
+{
+  "error": {
+    "email": "Email is invalid.",
+    "password": "Password must be at least 6 characters long."
+  }
+}
+```
+
+#### Status 409: Conflict error (if the email is already registered).
+
+Body:
+```json
+{
+  "error": "A user with this email already exists."
+}
+```
+
+## 2. Login User
+
+### Endpoint: `/v1/auth/login`
+
+### Method: POST
+
+### Description: 
+This endpoint allows an existing user to log in by providing valid email and password credentials. On success, a JWT token is returned for further authentication.
+
+### Request:
+
+#### Headers: 
+None required.
+
+#### Body:
+- `email` (string, required): The email address of the user. Example: "test@example.com"
+- `password` (string, required): The password of the user. Example: "password"
+
+### Response:
+
+#### Status 200: Successfully authenticated the user and returned the token.
+
+Body:
+```json
+{
+  "token": "your-authentication-token"
+}
+```
+
+#### Status 401: Unauthorized access (invalid credentials).
+
+Body:
+```json
+{
+  "error": "Invalid email or password."
+}
+```
+
+## 3. Logout User
+
+### Endpoint: `/v1/auth/logout`
+
+### Method: POST
+
+### Description: 
+This endpoint allows a logged-in user to log out and invalidate their authentication token.
+
+### Request:
+
+#### Headers:
+- `Authorization` (required): The Bearer token for authentication. Example: `Authorization: Bearer your-authentication-token`
+
+#### Body: 
+None required.
+
+### Response:
+
+#### Status 200: Successfully logged out the user.
+
+Body:
+```json
+{
+  "message": "Successfully logged out."
+}
+```
+
+#### Status 401: Unauthorized (if the token is missing or invalid).
+
+Body:
+```json
+{
+  "error": "Invalid or missing authentication token."
+}
+```
+
+# Secrets API 
 
 
 **Authentication:** All routes require authentication via a valid JWT token in the Authorization header (e.g., `Authorization: Bearer <token>`), unless stated otherwise.
@@ -282,7 +409,7 @@ Allows a secret owner to revoke access to a shared secret from a specific user.
   }
   ```
 
-## Group API Documentation
+## Group API 
 
 ### 1. Create New Group
 
@@ -421,3 +548,140 @@ Deletes a group by its ID. Only the creator of the group can delete it.
 
 - **404 Not Found**
   - If the group does not exist.
+
+
+## Get User Secrets API
+
+### Endpoint: `/v1/secrets/user`
+
+### Method: GET
+
+### Description:
+
+Retrieves the secrets that belong to the authenticated user.
+
+### Request Headers:
+
+- `Authorization: Bearer <token>` — The JWT token obtained after login.
+
+### Request Body:
+
+No body is required for this request.
+
+### Responses:
+
+#### Success (200 OK):
+
+- **Message**: "Success!"
+- **Data**: An array of secrets belonging to the user.
+
+**Example Response**:
+
+```json
+{
+  "message": "Success!",
+  "data": [
+    {
+      "id": 1,
+      "name": "Secret 1",
+      "encrypted_data": "EncryptedData1",
+      "created_at": "2023-09-27T10:12:34Z"
+    },
+    {
+      "id": 2,
+      "name": "Secret 2",
+      "encrypted_data": "EncryptedData2",
+      "created_at": "2023-09-28T12:15:56Z"
+    }
+  ]
+}
+```
+
+#### Unauthorized (401 Unauthorized):
+
+- **Message**: "Authentication required"
+- **Error**: Returned when the Authorization header is missing or invalid.
+
+**Example Response**:
+
+```json
+{
+  "message": "Authentication required"
+}
+```
+
+## Get Group Secrets API
+
+### Endpoint: `/v1/secrets/group`
+
+### Method: GET
+
+### Description:
+
+Retrieves secrets that are shared with the specified group. Only group members or the group creator can access this information.
+
+### Request Headers:
+
+- `Authorization: Bearer <token>` — The JWT token obtained after login.
+
+### Request Body:
+
+- **group_id** (required): The ID of the group whose secrets you want to retrieve.
+
+**Example Request Body**:
+
+```json
+{
+  "group_id": 1
+}
+```
+
+### Responses:
+
+#### Success (200 OK):
+
+- **Message**: "Success!"
+- **Data**: An array of secrets that are shared with the group.
+
+**Example Response**:
+
+```json
+{
+  "message": "Success!",
+  "data": [
+    {
+      "id": 1,
+      "name": "Secret Shared with Group",
+      "encrypted_data": "EncryptedData1",
+      "created_at": "2023-09-27T10:12:34Z"
+    }
+  ]
+}
+```
+
+#### Validation Error (422 Unprocessable Entity):
+
+- **Error**: Occurs when group_id is not provided or invalid.
+
+**Example Response**:
+
+```json
+{
+  "error": {
+    "group_id": "must be provided"
+  }
+}
+```
+
+#### Unauthorized (401 Unauthorized):
+
+- **Message**: "Only group members can access secrets."
+- **Error**: Occurs when the user is not part of the group or not authorized to access its secrets.
+
+**Example Response**:
+
+```json
+{
+  "message": "Only group members can access secrets."
+}
+```

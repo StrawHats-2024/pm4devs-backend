@@ -10,6 +10,8 @@ import (
 
 const GetUserSecretsRoute = "/v1/secrets/user"
 const GetGroupSecretsRoute = "/v1/secrets/group"
+
+// TODO: impliment this
 const GetSharedByUserSecretRoute = "/v1/secrets/shared"
 
 func (app *Secret) getUserSecrets(w http.ResponseWriter, r *http.Request) {
