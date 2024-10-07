@@ -1,6 +1,5 @@
 # Secrets API Documentation
 
-**Base URL:** `/v1/secrets`
 
 **Authentication:** All routes require authentication via a valid JWT token in the Authorization header (e.g., `Authorization: Bearer <token>`), unless stated otherwise.
 

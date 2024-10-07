@@ -20,6 +20,7 @@ type GroupRepository interface {
 	AddUser(groupId, userId int64) *xerrors.AppError
 	RemoveUser(groupId, userId int64) *xerrors.AppError
 	GetGroupsByUserID(userID int64) ([]GroupRecord, *xerrors.AppError)
+	IsUserInGroup(groupID, userID int64) (bool, *xerrors.AppError)
 }
 
 type Group struct {
@@ -190,4 +191,34 @@ func (g *Group) RemoveUser(groupId, userId int64) *xerrors.AppError {
 	}
 
 	return nil
+}
+
+func (g *Group) IsUserInGroup(groupID, userID int64) (bool, *xerrors.AppError) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// Prepare the SQL query to check if the user is the creator or a member of the group
+	query := `
+		SELECT 1
+		FROM groups
+		WHERE id = $1 AND (creator_id = $2 OR EXISTS (
+			SELECT 1 
+			FROM group_members 
+			WHERE group_id = $1 AND user_id = $2
+		));
+	`
+
+	var exists int
+	err := g.DB.QueryRowContext(ctx, query, groupID, userID).Scan(&exists)
+
+	// If no rows were found, the user is neither a member nor the creator of the group
+	if err == sql.ErrNoRows {
+		return false, nil
+	} else if err != nil {
+		// Handle database error
+		return false, xerrors.DatabaseError(err, "group.IsUserInGroup")
+	}
+
+	// User is either the creator or a member of the group
+	return true, nil
 }

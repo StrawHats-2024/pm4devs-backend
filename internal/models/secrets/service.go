@@ -36,6 +36,8 @@ type SecretsRepository interface {
 	RevokeFromGroup(secretID, groupID int64) *xerrors.AppError
 	RevokeFromUser(secretID, userID int64) *xerrors.AppError
 	GetUserSecretPermission(userID int64, secretID int64) (Permission, *xerrors.AppError)
+	GetSecretsSharedToOtherUsers(userID int64) (*[]SharedSecretUser, *xerrors.AppError)
+	GetSecretsSharedToGroups(userID int64) (*[]SharedSecretGroup, *xerrors.AppError)
 }
 
 type Secrets struct {
