@@ -1,687 +1,251 @@
 # API Documentation
 
-## 1. Register User
+## Table of Contents
+1. [Authentication API](#authentication-api)
+2. [Secrets API](#secrets-api)
+3. [Group API](#group-api)
+4. [User Secrets API](#user-secrets-api)
+5. [Group Secrets API](#group-secrets-api)
 
-### Endpoint: `/v1/auth/register`
+List of all the routes present in the API:
 
-### Method: POST
-
-### Description: 
-This endpoint allows you to create a new user account by providing an email and password.
-
-### Request:
-
-#### Headers: 
-None required.
-
-#### Body:
-- `email` (string, required): The email address for the new user. Example: "test@example.com"
-- `password` (string, required): The password for the new user. Example: "password"
-
-### Response:
-
-#### Status 201: Successfully registered the user.
-
-Body:
-```json
-{
-  "message": "User successfully registered."
-}
-```
-
-#### Status 422: Validation errors (if the input is invalid).
-
-Body:
-```json
-{
-  "error": {
-    "email": "Email is invalid.",
-    "password": "Password must be at least 6 characters long."
-  }
-}
-```
-
-#### Status 409: Conflict error (if the email is already registered).
-
-Body:
-```json
-{
-  "error": "A user with this email already exists."
-}
-```
-
-## 2. Login User
-
-### Endpoint: `/v1/auth/login`
-
-### Method: POST
-
-### Description: 
-This endpoint allows an existing user to log in by providing valid email and password credentials. On success, a JWT token is returned for further authentication.
-
-### Request:
-
-#### Headers: 
-None required.
-
-#### Body:
-- `email` (string, required): The email address of the user. Example: "test@example.com"
-- `password` (string, required): The password of the user. Example: "password"
-
-### Response:
-
-#### Status 200: Successfully authenticated the user and returned the token.
-
-Body:
-```json
-{
-  "token": "your-authentication-token"
-}
-```
-
-#### Status 401: Unauthorized access (invalid credentials).
-
-Body:
-```json
-{
-  "error": "Invalid email or password."
-}
-```
-
-## 3. Logout User
-
-### Endpoint: `/v1/auth/logout`
-
-### Method: POST
-
-### Description: 
-This endpoint allows a logged-in user to log out and invalidate their authentication token.
-
-### Request:
-
-#### Headers:
-- `Authorization` (required): The Bearer token for authentication. Example: `Authorization: Bearer your-authentication-token`
-
-#### Body: 
-None required.
-
-### Response:
-
-#### Status 200: Successfully logged out the user.
-
-Body:
-```json
-{
-  "message": "Successfully logged out."
-}
-```
-
-#### Status 401: Unauthorized (if the token is missing or invalid).
-
-Body:
-```json
-{
-  "error": "Invalid or missing authentication token."
-}
-```
-
-# Secrets API 
+1. `/v1/auth/register` (POST)
+2. `/v1/auth/login` (POST)
+3. `/v1/auth/logout` (POST)
+4. `/v1/secrets` (POST, GET, PATCH, DELETE)
+5. `/v1/secrets/share/user` (POST, PATCH, DELETE)
+6. `/v1/secrets/share/group` (POST, PATCH, DELETE)
+7. `/v1/groups` (POST, GET, PATCH, DELETE)
+8. `/v1/secrets/user` (GET)
+9. `/v1/secrets/group` (GET)
 
 
-**Authentication:** All routes require authentication via a valid JWT token in the Authorization header (e.g., `Authorization: Bearer <token>`), unless stated otherwise.
+## Authentication API
 
-## Endpoints
+### 1. Register User
+- **Endpoint**: `/v1/auth/register`
+- **Method**: POST
+- **Description**: Create a new user account.
+- **Request Body**:
+  - `email` (string, required): User's email address
+  - `password` (string, required): User's password
+- **Responses**:
+  - 201 Created: User successfully registered
+  - 422 Unprocessable Entity: Validation errors
+  - 409 Conflict: Email already registered
+
+### 2. Login User
+- **Endpoint**: `/v1/auth/login`
+- **Method**: POST
+- **Description**: Authenticate user and receive Auth token.
+- **Request Body**:
+  - `email` (string, required): User's email address
+  - `password` (string, required): User's password
+- **Responses**:
+  - 200 OK: Successfully authenticated, returns token
+  - 401 Unauthorized: Invalid credentials
+
+### 3. Logout User
+- **Endpoint**: `/v1/auth/logout`
+- **Method**: POST
+- **Description**: Invalidate user's authentication token.
+- **Headers**:
+  - `Authorization`: Bearer token
+- **Responses**:
+  - 200 OK: Successfully logged out
+  - 401 Unauthorized: Invalid or missing token
+
+## Secrets API
+
+**Note**: All routes require authentication via Auth token in the Authorization header.
 
 ### 1. Create a Secret
-
-**POST /v1/secrets**
-
-Creates a new secret entry for the authenticated user.
-
-#### Request Body
-```json
-{
-  "name": "string",          // Required, name of the secret (e.g., "Bank Account")
-  "encrypted_data": "string" // Required, the encrypted value (e.g., an encrypted password)
-}
-```
-
-#### Responses
-
-- **201 Created**
-  ```json
-  {
-    "message": "Success! Your secret has been created.",
-    "secret_id": "integer"   // The ID of the newly created secret
-  }
-  ```
-
-- **422 Unprocessable Entity**
-  ```json
-  {
-    "error": {
-      "name": "must be provided",
-      "encrypted_data": "must be provided"
-    }
-  }
-  ```
-
-- **401 Unauthorized**
-  - If the user is not authenticated or token is invalid.
+- **Endpoint**: `/v1/secrets`
+- **Method**: POST
+- **Request Body**:
+  - `name` (string, required): Name of the secret
+  - `encrypted_data` (string, required): Encrypted value
+- **Responses**:
+  - 201 Created: Secret created successfully
+  - 422 Unprocessable Entity: Validation errors
+  - 401 Unauthorized: User not authenticated
 
 ### 2. Retrieve a Secret
-
-**GET /v1/secrets**
-
-Retrieves a secret by its ID for the authenticated user.
-
-#### Request Body
-```json
-{
-  "secret_id": 1  // Required, ID of the secret to retrieve
-}
-```
-
-#### Responses
-
-- **200 OK**
-  ```json
-  {
-    "message": "Success!",
-    "data": {
-      "secret_id": "integer",
-      "name": "string",
-      "encrypted_data": "string",
-      "owner_id": "integer"
-    }
-  }
-  ```
-
-- **422 Unprocessable Entity**
-  ```json
-  {
-    "error": {
-      "secret_id": "must be provided"
-    }
-  }
-  ```
-
-- **401 Unauthorized**
-  - If the user does not have permission to access the secret.
+- **Endpoint**: `/v1/secrets`
+- **Method**: GET
+- **Request Body**:
+  - `secret_id` (integer, required): ID of the secret to retrieve
+- **Responses**:
+  - 200 OK: Secret retrieved successfully
+  - 422 Unprocessable Entity: Invalid secret_id
+  - 401 Unauthorized: User lacks permission
 
 ### 3. Update a Secret
-
-**PATCH /v1/secrets**
-
-Updates an existing secret for the authenticated user.
-
-#### Request Body
-```json
-{
-  "secret_id": 1,             // Required, ID of the secret to update
-  "name": "newname",          // Required, updated name of the secret
-  "encrypted_data": "newdata" // Required, updated encrypted data
-}
-```
-
-#### Responses
-
-- **200 OK**
-  ```json
-  {
-    "message": "Success!"
-  }
-  ```
-
-- **422 Unprocessable Entity**
-  ```json
-  {
-    "error": {
-      "secret_id": "must be provided",
-      "name": "must be provided",
-      "encrypted_data": "must be provided"
-    }
-  }
-  ```
-
-- **401 Unauthorized**
-  ```json
-  {
-    "message": "Only owner can update a secret"
-  }
-  ```
+- **Endpoint**: `/v1/secrets`
+- **Method**: PATCH
+- **Request Body**:
+  - `secret_id` (integer, required): ID of the secret to update
+  - `name` (string, required): Updated name of the secret
+  - `encrypted_data` (string, required): Updated encrypted data
+- **Responses**:
+  - 200 OK: Secret updated successfully
+  - 422 Unprocessable Entity: Validation errors
+  - 401 Unauthorized: User not owner of the secret
 
 ### 4. Delete a Secret
-
-**DELETE /v1/secrets**
-
-Deletes an existing secret for the authenticated user.
-
-#### Request Body
-```json
-{
-  "secret_id": 1  // Required, ID of the secret to delete
-}
-```
-
-#### Responses
-
-- **204 No Content**
-  - No response body.
-
-- **422 Unprocessable Entity**
-  ```json
-  {
-    "error": {
-      "secret_id": "must be provided"
-    }
-  }
-  ```
-
-- **401 Unauthorized**
-  ```json
-  {
-    "message": "Only owner can delete a secret"
-  }
-  ```
+- **Endpoint**: `/v1/secrets`
+- **Method**: DELETE
+- **Request Body**:
+  - `secret_id` (integer, required): ID of the secret to delete
+- **Responses**:
+  - 204 No Content: Secret deleted successfully
+  - 422 Unprocessable Entity: Invalid secret_id
+  - 401 Unauthorized: User not owner of the secret
 
 ### 5. Share Secret with User
-
-**POST /v1/secrets/share/user**
-
-Allows a secret owner to share a secret with another user, granting either "read-only" or "read-write" access.
-
-#### Request Body
-```json
-{
-  "secret_id": 1,           // Required, must be a valid secret ID owned by the current user
-  "user_id": 2,             // Required, the ID of the user to share the secret with
-  "permission": "read-only" // Required, must be either 'read-only' or 'read-write'
-}
-```
-
-#### Responses
-
-- **201 Created**
-  ```json
-  {
-    "message": "Secret shared successfully with the user."
-  }
-  ```
-
-- **422 Unprocessable Entity**
-  ```json
-  {
-    "error": {
-      "secret_id": "must be provided",
-      "user_id": "must be provided",
-      "permission": "must be 'read-only' or 'read-write'"
-    }
-  }
-  ```
-
-- **401 Unauthorized**
-  ```json
-  {
-    "message": "Only secret owner can manage access"
-  }
-  ```
+- **Endpoint**: `/v1/secrets/share/user`
+- **Method**: POST
+- **Request Body**:
+  - `secret_id` (integer, required): ID of the secret to share
+  - `user_id` (integer, required): ID of the user to share with
+  - `permission` (string, required): Either 'read-only' or 'read-write'
+- **Responses**:
+  - 201 Created: Secret shared successfully
+  - 422 Unprocessable Entity: Validation errors
+  - 401 Unauthorized: User not owner of the secret
 
 ### 6. Update Permission for Shared Secret
-
-**PATCH /v1/secrets/update/user**
-
-Allows a secret owner to update the permission level of another user who has access to the secret.
-
-#### Request Body
-```json
-{
-  "secret_id": 1,            // Required, must be a valid secret ID owned by the current user
-  "user_id": 2,              // Required, the ID of the user whose permission is being updated
-  "permission": "read-write" // Required, must be either 'read-only' or 'read-write'
-}
-```
-
-#### Responses
-
-- **200 OK**
-  ```json
-  {
-    "message": "Permission updated successfully for the user."
-  }
-  ```
-
-- **422 Unprocessable Entity**
-  ```json
-  {
-    "error": {
-      "secret_id": "must be provided",
-      "user_id": "must be provided",
-      "permission": "must be 'read-only' or 'read-write'"
-    }
-  }
-  ```
-
-- **401 Unauthorized**
-  ```json
-  {
-    "message": "Only secret owner can manage access"
-  }
-  ```
+- **Endpoint**: `/v1/secrets/update/user`
+- **Method**: PATCH
+- **Request Body**:
+  - `secret_id` (integer, required): ID of the shared secret
+  - `user_id` (integer, required): ID of the user to update permission for
+  - `permission` (string, required): Either 'read-only' or 'read-write'
+- **Responses**:
+  - 200 OK: Permission updated successfully
+  - 422 Unprocessable Entity: Validation errors
+  - 401 Unauthorized: User not owner of the secret
 
 ### 7. Revoke User's Permission for Shared Secret
+- **Endpoint**: `/v1/secrets/revoke/user`
+- **Method**: DELETE
+- **Request Body**:
+  - `secret_id` (integer, required): ID of the shared secret
+  - `user_id` (integer, required): ID of the user to revoke access from
+- **Responses**:
+  - 200 OK: Permission revoked successfully
+  - 422 Unprocessable Entity: Validation errors
+  - 401 Unauthorized: User not owner of the secret
 
-**DELETE /v1/secrets/revoke/user**
+### 8. Share Secret with Group
+- **Endpoint**: `/v1/secrets/share/group`
+- **Method**: POST
+- **Description**: Share a secret with a group, granting either read-only or read-write access.
+- **Request Body**:
+  - `secret_id` (integer, required): ID of the secret to share
+  - `group_id` (integer, required): ID of the group to share with
+  - `permission` (string, required): Either 'read-only' or 'read-write'
+- **Responses**:
+  - 201 Created: Secret shared successfully
+  - 422 Unprocessable Entity: Validation errors
+  - 401 Unauthorized: User not owner of the secret
 
-Allows a secret owner to revoke access to a shared secret from a specific user.
+### 9. Update Group Permission for Shared Secret
+- **Endpoint**: `/v1/secrets/share/group`
+- **Method**: PATCH
+- **Description**: Update the permission level for a group that has access to a shared secret.
+- **Request Body**:
+  - `secret_id` (integer, required): ID of the shared secret
+  - `group_id` (integer, required): ID of the group to update permission for
+  - `permission` (string, required): Either 'read-only' or 'read-write'
+- **Responses**:
+  - 200 OK: Permission updated successfully
+  - 422 Unprocessable Entity: Validation errors
+  - 401 Unauthorized: User not owner of the secret
 
-#### Request Body
-```json
-{
-  "secret_id": 1, // Required, must be a valid secret ID owned by the current user
-  "user_id": 2    // Required, the ID of the user whose permission is being revoked
-}
-```
+### 10. Revoke Group's Permission for Shared Secret
+- **Endpoint**: `/v1/secrets/share/group`
+- **Method**: DELETE
+- **Description**: Revoke a group's access to a shared secret.
+- **Request Body**:
+  - `secret_id` (integer, required): ID of the shared secret
+  - `group_id` (integer, required): ID of the group to revoke access from
+- **Responses**:
+  - 200 OK: Permission revoked successfully
+  - 422 Unprocessable Entity: Validation errors
+  - 401 Unauthorized: User not owner of the secret
 
-#### Responses
 
-- **200 OK**
-  ```json
-  {
-    "message": "Permission revoked successfully for the user."
-  }
-  ```
-
-- **422 Unprocessable Entity**
-  ```json
-  {
-    "error": {
-      "secret_id": "must be provided",
-      "user_id": "must be provided"
-    }
-  }
-  ```
-
-- **401 Unauthorized**
-  ```json
-  {
-    "message": "Only secret owner can manage access"
-  }
-  ```
-
-## Group API 
+## Group API
 
 ### 1. Create New Group
-
-**POST /v1/groups**
-
-Creates a new group.
-
-#### Request Body
-```json
-{
-  "group_name": "string" // Must be a string of at least 5 characters
-}
-```
-
-#### Responses
-
-- **201 Created**
-  ```json
-  {
-    "Message": "Success!",
-    "data": {
-      "group_name": "string",
-      "id": "int64"
-    }
-  }
-  ```
-
-- **400 Bad Request**
-  - Invalid or missing body (e.g., "group_name" key missing).
-
-- **422 Unprocessable Entity**
-  - Group name too short (less than 5 characters).
-  - Validation error for the request body format.
-
-- **409 Conflict**
-  - If the group name already exists.
+- **Endpoint**: `/v1/groups`
+- **Method**: POST
+- **Request Body**:
+  - `group_name` (string, required): Name of the group (minimum 5 characters)
+- **Responses**:
+  - 201 Created: Group created successfully
+  - 400 Bad Request: Invalid or missing body
+  - 422 Unprocessable Entity: Validation errors
+  - 409 Conflict: Group name already exists
 
 ### 2. Get Group by ID
-
-**GET /v1/groups**
-
-Retrieves a group by its ID.
-
-#### Request Body
-```json
-{
-  "group_id": "int64" // Must be a positive integer
-}
-```
-
-#### Responses
-
-- **200 OK**
-  ```json
-  {
-    "Message": "Success!",
-    "Data": {
-      "id": "int64",
-      "name": "string",
-      "creator_id": "int64",
-      "created_at": "timestamp"
-    }
-  }
-  ```
-
-- **400 Bad Request**
-  - Missing body or incorrect format.
-
-- **422 Unprocessable Entity**
-  - If group_id is invalid or zero.
-
-- **404 Not Found**
-  - If the group does not exist.
+- **Endpoint**: `/v1/groups`
+- **Method**: GET
+- **Request Body**:
+  - `group_id` (integer, required): ID of the group to retrieve
+- **Responses**:
+  - 200 OK: Group retrieved successfully
+  - 400 Bad Request: Invalid or missing body
+  - 422 Unprocessable Entity: Invalid group_id
+  - 404 Not Found: Group does not exist
 
 ### 3. Update Group
-
-**PATCH /v1/groups**
-
-Updates the name of an existing group. Only the group creator can update the group name.
-
-#### Request Body
-```json
-{
-  "new_group_name": "string", // Must be a string of at least 5 characters
-  "group_id": "int64"         // Must be a positive integer
-}
-```
-
-#### Responses
-
-- **200 OK**
-  ```json
-  {
-    "Message": "Success!"
-  }
-  ```
-
-- **400 Bad Request**
-  - Missing or invalid body.
-
-- **422 Unprocessable Entity**
-  - Group name is too short, or group ID is invalid.
-
-- **401 Unauthorized**
-  - If the user is not the owner of the group.
-
-- **404 Not Found**
-  - If the group does not exist.
+- **Endpoint**: `/v1/groups`
+- **Method**: PATCH
+- **Request Body**:
+  - `group_id` (integer, required): ID of the group to update
+  - `new_group_name` (string, required): New name for the group (minimum 5 characters)
+- **Responses**:
+  - 200 OK: Group updated successfully
+  - 400 Bad Request: Invalid or missing body
+  - 422 Unprocessable Entity: Validation errors
+  - 401 Unauthorized: User not owner of the group
+  - 404 Not Found: Group does not exist
 
 ### 4. Delete Group
+- **Endpoint**: `/v1/groups`
+- **Method**: DELETE
+- **Request Body**:
+  - `group_id` (integer, required): ID of the group to delete
+- **Responses**:
+  - 204 No Content: Group deleted successfully
+  - 400 Bad Request: Invalid or missing body
+  - 422 Unprocessable Entity: Invalid group_id
+  - 401 Unauthorized: User not creator of the group
+  - 404 Not Found: Group does not exist
 
-**DELETE /v1/groups**
+## User Secrets API
 
-Deletes a group by its ID. Only the creator of the group can delete it.
+### Get User Secrets
+- **Endpoint**: `/v1/secrets/user`
+- **Method**: GET
+- **Headers**:
+  - `Authorization`: Bearer token
+- **Responses**:
+  - 200 OK: User secrets retrieved successfully
+  - 401 Unauthorized: Authentication required
 
-#### Request Body
-```json
-{
-  "group_id": "int64" // Must be a positive integer
-}
-```
+## Group Secrets API
 
-#### Responses
-
-- **204 No Content**
-  - Success with no body content returned.
-
-- **400 Bad Request**
-  - Invalid or missing body.
-
-- **422 Unprocessable Entity**
-  - If group_id is invalid or zero.
-
-- **401 Unauthorized**
-  - If the user is not the creator of the group.
-
-- **404 Not Found**
-  - If the group does not exist.
-
-
-## Get User Secrets API
-
-### Endpoint: `/v1/secrets/user`
-
-### Method: GET
-
-### Description:
-
-Retrieves the secrets that belong to the authenticated user.
-
-### Request Headers:
-
-- `Authorization: Bearer <token>` — The JWT token obtained after login.
-
-### Request Body:
-
-No body is required for this request.
-
-### Responses:
-
-#### Success (200 OK):
-
-- **Message**: "Success!"
-- **Data**: An array of secrets belonging to the user.
-
-**Example Response**:
-
-```json
-{
-  "message": "Success!",
-  "data": [
-    {
-      "id": 1,
-      "name": "Secret 1",
-      "encrypted_data": "EncryptedData1",
-      "created_at": "2023-09-27T10:12:34Z"
-    },
-    {
-      "id": 2,
-      "name": "Secret 2",
-      "encrypted_data": "EncryptedData2",
-      "created_at": "2023-09-28T12:15:56Z"
-    }
-  ]
-}
-```
-
-#### Unauthorized (401 Unauthorized):
-
-- **Message**: "Authentication required"
-- **Error**: Returned when the Authorization header is missing or invalid.
-
-**Example Response**:
-
-```json
-{
-  "message": "Authentication required"
-}
-```
-
-## Get Group Secrets API
-
-### Endpoint: `/v1/secrets/group`
-
-### Method: GET
-
-### Description:
-
-Retrieves secrets that are shared with the specified group. Only group members or the group creator can access this information.
-
-### Request Headers:
-
-- `Authorization: Bearer <token>` — The JWT token obtained after login.
-
-### Request Body:
-
-- **group_id** (required): The ID of the group whose secrets you want to retrieve.
-
-**Example Request Body**:
-
-```json
-{
-  "group_id": 1
-}
-```
-
-### Responses:
-
-#### Success (200 OK):
-
-- **Message**: "Success!"
-- **Data**: An array of secrets that are shared with the group.
-
-**Example Response**:
-
-```json
-{
-  "message": "Success!",
-  "data": [
-    {
-      "id": 1,
-      "name": "Secret Shared with Group",
-      "encrypted_data": "EncryptedData1",
-      "created_at": "2023-09-27T10:12:34Z"
-    }
-  ]
-}
-```
-
-#### Validation Error (422 Unprocessable Entity):
-
-- **Error**: Occurs when group_id is not provided or invalid.
-
-**Example Response**:
-
-```json
-{
-  "error": {
-    "group_id": "must be provided"
-  }
-}
-```
-
-#### Unauthorized (401 Unauthorized):
-
-- **Message**: "Only group members can access secrets."
-- **Error**: Occurs when the user is not part of the group or not authorized to access its secrets.
-
-**Example Response**:
-
-```json
-{
-  "message": "Only group members can access secrets."
-}
-```
+### Get Group Secrets
+- **Endpoint**: `/v1/secrets/group`
+- **Method**: GET
+- **Headers**:
+  - `Authorization`: Bearer token
+- **Request Body**:
+  - `group_id` (integer, required): ID of the group
+- **Responses**:
+  - 200 OK: Group secrets retrieved successfully
+  - 422 Unprocessable Entity: Invalid or missing group_id
+  - 401 Unauthorized: User not a member of the group
