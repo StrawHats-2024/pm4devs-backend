@@ -52,6 +52,7 @@ func (app *Group) createNew(w http.ResponseWriter, r *http.Request) {
 	newGroup, err := app.group.NewRecord(input.GroupName, currUser.ID)
 	if err != nil {
 		app.rest.Error(w, err)
+		return
 	}
 	app.rest.WriteJSON(w, "group.createNew", http.StatusCreated, rest.Envelope{
 		"Message": "Success!",
