@@ -1,0 +1,2 @@
+ALTER TABLE secrets
+ADD COLUMN iv bytea NOT NULL DEFAULT '\x00';  

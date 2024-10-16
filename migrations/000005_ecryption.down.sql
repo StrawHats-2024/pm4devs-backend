@@ -1,0 +1,2 @@
+ALTER TABLE secrets
+DROP COLUMN iv;

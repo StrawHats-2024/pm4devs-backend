@@ -65,6 +65,7 @@ List of all the routes present in the API:
 - **Request Body**:
   - `name` (string, required): Name of the secret
   - `encrypted_data` (string, required): Encrypted value
+  - `iv` (string required): Initialization Vector
 - **Responses**:
   - 201 Created: Secret created successfully
   - 422 Unprocessable Entity: Validation errors

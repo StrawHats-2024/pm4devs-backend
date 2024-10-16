@@ -25,7 +25,7 @@ type SecretsRepository interface {
 	GetByUserEmail(email string) (*[]SecretRecord, *xerrors.AppError)
 	GetByGroupID(id int64) (*[]SecretRecord, *xerrors.AppError)
 	// GetByGroupName(name string) (*[]SecretRecord, *xerrors.AppError)
-	NewRecord(name, EncryptedData string, ownerID int64) (*SecretRecord, *xerrors.AppError)
+	NewRecord(name, EncryptedData, IV string, ownerID int64) (*SecretRecord, *xerrors.AppError)
 	Delete(secretID int64) *xerrors.AppError
 	Update(secretID int64, newName, newEncryptedData string) *xerrors.AppError
 	GetSecretByID(secretID int64) (*SecretRecord, *xerrors.AppError)
@@ -100,14 +100,14 @@ func (s *Secrets) GetByUserEmail(email string) (*[]SecretRecord, *xerrors.AppErr
 	return s.GetByUserID(user.ID)
 }
 
-func (s *Secrets) NewRecord(name, encryptedData string, ownerID int64) (*SecretRecord, *xerrors.AppError) {
+func (s *Secrets) NewRecord(name, encryptedData, iv string, ownerID int64) (*SecretRecord, *xerrors.AppError) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	// Prepare the SQL query to insert a new secret
 	query := `
-		INSERT INTO secrets (name, encrypted_data, owner_id, created_at)
-		VALUES ($1, $2, $3, NOW())
+		INSERT INTO secrets (name, encrypted_data, iv, owner_id, created_at)
+		VALUES ($1, $2, $3, $4, NOW())
 		RETURNING id, created_at;
 	`
 
@@ -115,7 +115,7 @@ func (s *Secrets) NewRecord(name, encryptedData string, ownerID int64) (*SecretR
 	var secret SecretRecord
 
 	// Execute the insert statement with the provided values
-	err := s.DB.QueryRowContext(ctx, query, name, []byte(encryptedData),
+	err := s.DB.QueryRowContext(ctx, query, name, []byte(encryptedData), []byte(iv),
 		ownerID).Scan(&secret.ID, &secret.CreatedAt)
 	if err != nil {
 		return nil, xerrors.DatabaseError(err, "secrets.New")
@@ -124,6 +124,7 @@ func (s *Secrets) NewRecord(name, encryptedData string, ownerID int64) (*SecretR
 	// Set the Name and EncryptedData fields
 	secret.Name = name
 	secret.EncryptedData = []byte(encryptedData)
+	secret.IV = []byte(encryptedData)
 
 	// Return the newly created secret record
 	return &secret, nil
@@ -135,7 +136,7 @@ func (s *Secrets) GetByUserID(userID int64) (*[]SecretRecord, *xerrors.AppError)
 
 	// Prepare the SQL query to select secrets for the given user ID
 	query := `
-		SELECT id, name, encrypted_data, created_at
+		SELECT id, name, encrypted_data, iv, created_at
 		FROM secrets
 		WHERE owner_id = $1;
 	`
