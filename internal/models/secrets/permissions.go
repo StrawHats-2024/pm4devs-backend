@@ -18,7 +18,7 @@ func (s *Secrets) GetUserSecretPermission(userID int64, secretID int64) (
 
 	if currSecret, err := s.GetSecretByID(secretID); err != nil {
 		return NOTALLOWED, err
-	} else if currSecret.ID == userID {
+	} else if currSecret.OwnerID == userID {
 		return ReadWrite, nil
 	}
 
