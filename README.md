@@ -88,6 +88,7 @@ List of all the routes present in the API:
   - `secret_id` (integer, required): ID of the secret to update
   - `name` (string, required): Updated name of the secret
   - `encrypted_data` (string, required): Updated encrypted data
+  - `iv` (string required): Updated initialization Vector
 - **Responses**:
   - 200 OK: Secret updated successfully
   - 422 Unprocessable Entity: Validation errors

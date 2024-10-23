@@ -154,7 +154,7 @@ func (s *Secrets) GetByUserID(userID int64) (*[]SecretRecord, *xerrors.AppError)
 	// Iterate through the rows and scan the data into SecretRecord structs
 	for rows.Next() {
 		var secret SecretRecord
-		if err := rows.Scan(&secret.ID, &secret.Name, &secret.EncryptedData, &secret.CreatedAt); err != nil {
+		if err := rows.Scan(&secret.ID, &secret.Name, &secret.EncryptedData, &secret.IV, &secret.CreatedAt); err != nil {
 			return nil, xerrors.DatabaseError(err, "secrets.GetByUserID - scan")
 		}
 		secrets = append(secrets, secret)
@@ -208,7 +208,7 @@ func (s *Secrets) Update(secretID int64, newName, newEncryptedData, iv string) *
 		WHERE id = $4;
 	`
 
-	_, err := s.DB.ExecContext(ctx, query, newName, []byte(newEncryptedData), []byte(iv),  secretID)
+	_, err := s.DB.ExecContext(ctx, query, newName, []byte(newEncryptedData), []byte(iv), secretID)
 	if err != nil {
 		return xerrors.DatabaseError(err, "secrets.Update")
 	}
@@ -222,7 +222,7 @@ func (s *Secrets) GetSecretByID(secretID int64) (*SecretRecord, *xerrors.AppErro
 
 	// Prepare the SQL query to get the secret by its ID
 	query := `
-		SELECT id, name, encrypted_data, owner_id, created_at
+		SELECT id, name, encrypted_data, iv, owner_id, created_at
 		FROM secrets
 		WHERE id = $1;
 	`
@@ -232,7 +232,7 @@ func (s *Secrets) GetSecretByID(secretID int64) (*SecretRecord, *xerrors.AppErro
 
 	// Execute the query and scan the result into the secret struct
 	err := s.DB.QueryRowContext(ctx, query, secretID).Scan(
-		&secret.ID, &secret.Name, &secret.EncryptedData, &secret.OwnerID, &secret.CreatedAt,
+		&secret.ID, &secret.Name, &secret.EncryptedData, &secret.IV, &secret.OwnerID, &secret.CreatedAt,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
