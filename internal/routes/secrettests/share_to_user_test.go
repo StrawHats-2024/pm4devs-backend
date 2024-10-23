@@ -27,7 +27,7 @@ func TestShareToUser(t *testing.T) {
 	tokenTwo := utils.LoginUser(authHandler, credentialsTwo)
 	assert.Check(t, len(tokenTwo) > 0)
 
-	secretData := `{"encrypted_data": "test@example.com", "name": "testname"}`
+	secretData := `{"encrypted_data": "test@example.com", "name": "testname", "iv": "testing"}`
 	res := sendAuthRequest(handler, http.MethodPost, secret.SecretCRUDRoute, secretData, token)
 	assert.Equal(t, res, http.StatusCreated)
 
@@ -122,7 +122,7 @@ func TestUpdateUserPermission(t *testing.T) {
 	tokenTwo := utils.LoginUser(authHandler, credentialsTwo)
 	assert.Check(t, len(tokenTwo) > 0)
 
-	secretData := `{"encrypted_data": "test@example.com", "name": "testname"}`
+	secretData := `{"encrypted_data": "test@example.com", "name": "testname", "iv": "testing"}`
 	res := sendAuthRequest(handler, http.MethodPost, secret.SecretCRUDRoute, secretData, token)
 	assert.Equal(t, res, http.StatusCreated)
 
@@ -213,7 +213,7 @@ func TestRevokeUserPermission(t *testing.T) {
 	tokenTwo := utils.LoginUser(authHandler, credentialsTwo)
 	assert.Check(t, len(tokenTwo) > 0)
 
-	secretData := `{"encrypted_data": "test@example.com", "name": "testname"}`
+	secretData := `{"encrypted_data": "test@example.com", "name": "testname", "iv": "testing"}`
 	res := sendAuthRequest(handler, http.MethodPost, secret.SecretCRUDRoute, secretData, token)
 	assert.Equal(t, res, http.StatusCreated)
 	// Sample test cases

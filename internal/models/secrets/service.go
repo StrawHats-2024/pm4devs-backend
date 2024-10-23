@@ -27,7 +27,7 @@ type SecretsRepository interface {
 	// GetByGroupName(name string) (*[]SecretRecord, *xerrors.AppError)
 	NewRecord(name, EncryptedData, IV string, ownerID int64) (*SecretRecord, *xerrors.AppError)
 	Delete(secretID int64) *xerrors.AppError
-	Update(secretID int64, newName, newEncryptedData string) *xerrors.AppError
+	Update(secretID int64, newName, newEncryptedData, IV string) *xerrors.AppError
 	GetSecretByID(secretID int64) (*SecretRecord, *xerrors.AppError)
 	ShareToGroup(secretID, groupID int64, permission Permission) *xerrors.AppError
 	ShareToUser(secretID, userID int64, permission Permission) *xerrors.AppError
@@ -198,17 +198,17 @@ func (s *Secrets) Delete(secretID int64) *xerrors.AppError {
 }
 
 // Update a secret by secret ID
-func (s *Secrets) Update(secretID int64, newName, newEncryptedData string) *xerrors.AppError {
+func (s *Secrets) Update(secretID int64, newName, newEncryptedData, iv string) *xerrors.AppError {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	query := `
 		UPDATE secrets
-		SET name = $1, encrypted_data = $2, updated_at = NOW()
-		WHERE id = $3;
+		SET name = $1, encrypted_data = $2, iv = $3, updated_at = NOW()
+		WHERE id = $4;
 	`
 
-	_, err := s.DB.ExecContext(ctx, query, newName, []byte(newEncryptedData), secretID)
+	_, err := s.DB.ExecContext(ctx, query, newName, []byte(newEncryptedData), []byte(iv),  secretID)
 	if err != nil {
 		return xerrors.DatabaseError(err, "secrets.Update")
 	}

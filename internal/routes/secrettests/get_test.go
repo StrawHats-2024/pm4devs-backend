@@ -55,9 +55,10 @@ func TestGetUsrSecrets(t *testing.T) {
 		t.Error(err)
 	}
 	_, err = app.Models.Secrets.NewRecord(gofakeit.Name(),
-		gofakeit.Sentence(5), user.ID)
+		gofakeit.Sentence(5), gofakeit.MonthString(), user.ID)
 	if err != nil {
 		t.Error(err)
+    return
 	}
 	assert.RunHandlerTestCase(t, handler, http.MethodGet, secret.GetUserSecretsRoute, assert.HandlerTestCase[responseMessage]{
 		Name:   "DummyData/Success",
@@ -104,7 +105,7 @@ func TestGetGroupSecrets(t *testing.T) {
 	assert.Equal(t, addMemberRes, http.StatusOK)
 
 	// Create a secret
-	secretData := `{"encrypted_data": "test@example.com", "name": "testname"}`
+  secretData := `{"encrypted_data": "test@example.com", "name": "testname", "iv": "testing"}`
 	secretRes := sendAuthRequest(secretsHandler, http.MethodPost, secret.SecretCRUDRoute, secretData, token)
 	assert.Equal(t, secretRes, http.StatusCreated)
 

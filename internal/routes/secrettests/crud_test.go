@@ -70,7 +70,7 @@ func TestCRUDSecrets(t *testing.T) {
 		},
 		{
 			Name:   "Success",
-			Body:   `{"encrypted_data": "test@example.com", "name": "testname"}`,
+			Body:   `{"encrypted_data": "test@example.com", "name": "testname", "iv": "testing"}`,
 			Auth:   token,
 			Method: http.MethodPost,
 			Status: http.StatusCreated,
@@ -115,21 +115,21 @@ func TestCRUDSecrets(t *testing.T) {
 		},
 		{
 			Name:   "PATCH/InvalidSecretID",
-			Body:   `{"secret_id": 0, "name": "ekjlfa", "encrypted_data": "sfjlsk"}`,
+			Body:   `{"secret_id": 0, "name": "ekjlfa", "encrypted_data": "sfjlsk", "iv": "test"}`,
 			Auth:   token,
 			Method: http.MethodPatch,
 			Status: http.StatusUnprocessableEntity,
 		},
 		{
 			Name:   "PATCH/Unauthorized",
-			Body:   `{"secret_id": 1, "name": "newname", "encrypted_data": "newdata"}`,
+			Body:   `{"secret_id": 1, "name": "newname", "encrypted_data": "newdata", "iv": "testing"}`,
 			Auth:   tokenTwo,
 			Method: http.MethodPatch,
 			Status: http.StatusUnauthorized,
 		},
 		{
 			Name:   "PATCH/Success",
-			Body:   `{"secret_id": 1, "name": "newname", "encrypted_data": "newdata"}`,
+			Body:   `{"secret_id": 1, "name": "newname", "encrypted_data": "newdata", "iv": "testing"}`,
 			Auth:   token,
 			Method: http.MethodPatch,
 			Status: http.StatusOK,

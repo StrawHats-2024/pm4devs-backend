@@ -74,6 +74,7 @@ func (app *Secret) update(w http.ResponseWriter, r *http.Request) {
 		SecretID      int64  `json:"secret_id"`
 		Name          string `json:"name"`
 		EncryptedData string `json:"encrypted_data"`
+		IV            string `json:"iv"`
 	}
 	// Parse request
 	if err := app.rest.ReadJSON(w, r, "secrets.update", &input); err != nil {
@@ -85,6 +86,7 @@ func (app *Secret) update(w http.ResponseWriter, r *http.Request) {
 	v.Check(input.SecretID > 0, "secret_id", "must be provided")
 	v.Check(len(input.Name) > 0, "name", "must be provided")
 	v.Check(len(input.EncryptedData) > 0, "encrypted_data", "must be provided")
+	v.Check(len(input.IV) > 0, "iv", "must be provided")
 	if err := v.Valid("secrets.update"); err != nil {
 		app.rest.Error(w, err)
 		return
@@ -102,7 +104,7 @@ func (app *Secret) update(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	err = app.secrets.Update(input.SecretID, input.Name, input.EncryptedData)
+	err = app.secrets.Update(input.SecretID, input.Name, input.EncryptedData, input.IV)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
@@ -161,6 +163,7 @@ func (app *Secret) createNew(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Name          string `json:"name"`
 		EncryptedData string `json:"encrypted_data"`
+		IV            string `json:"iv"`
 	}
 	// Parse request
 	if err := app.rest.ReadJSON(w, r, "secrets.createNew", &input); err != nil {
@@ -171,13 +174,14 @@ func (app *Secret) createNew(w http.ResponseWriter, r *http.Request) {
 	v := validator.New()
 	v.Check(len(input.Name) > 0, "name", "must be provided")
 	v.Check(len(input.EncryptedData) > 0, "encrypted_data", "must be provided")
+	v.Check(len(input.IV) > 0, "iv", "Initialization vector must be provided")
 	if err := v.Valid("secrets.createNew"); err != nil {
 		app.rest.Error(w, err)
 		return
 	}
 
 	user := middleware.ContextGetUser(r)
-	newSecret, err := app.secrets.NewRecord(input.Name, input.EncryptedData, user.ID)
+	newSecret, err := app.secrets.NewRecord(input.Name, input.EncryptedData, input.IV, user.ID)
 	if err != nil {
 		app.rest.Error(w, err)
 	}

@@ -30,7 +30,7 @@ func TestShareToGroup(t *testing.T) {
 	assert.Check(t, len(tokenTwo) > 0)
 
 	// Create a secret
-	secretData := `{"encrypted_data": "test@example.com", "name": "testname"}`
+	secretData := `{"encrypted_data": "test@example.com", "name": "testname", "iv": "testing"}`
 	res := sendAuthRequest(secretsHandler, http.MethodPost, secret.SecretCRUDRoute, secretData, token)
 	assert.Equal(t, res, http.StatusCreated)
 
@@ -132,7 +132,7 @@ func TestUpdateGroupPermission(t *testing.T) {
 	assert.Check(t, len(tokenTwo) > 0)
 
 	// Create a secret
-	secretData := `{"encrypted_data": "test@example.com", "name": "testname"}`
+	secretData := `{"encrypted_data": "test@example.com", "name": "testname", "iv": "testing"}`
 	res := sendAuthRequest(secretsHandler, http.MethodPost, secret.SecretCRUDRoute, secretData, token)
 	assert.Equal(t, res, http.StatusCreated)
 
@@ -233,7 +233,7 @@ func TestRevokeGroupPermission(t *testing.T) {
 	assert.Check(t, len(tokenTwo) > 0)
 
 	// Create a secret
-	secretData := `{"encrypted_data": "test@example.com", "name": "testname"}`
+	secretData := `{"encrypted_data": "test@example.com", "name": "testname", "iv": "testing"}`
 	res := sendAuthRequest(secretsHandler, http.MethodPost, secret.SecretCRUDRoute, secretData, token)
 	assert.Equal(t, res, http.StatusCreated)
 
