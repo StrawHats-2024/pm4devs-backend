@@ -18,8 +18,8 @@ func (app *Group) addUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var input struct {
-		GroupID int64 `json:"group_id"`
-		UserID  int64 `json:"user_id"`
+		GroupName string `json:"group_name"`
+		UserEmail string `json:"user_email"`
 	}
 
 	// Parse request
@@ -30,26 +30,37 @@ func (app *Group) addUser(w http.ResponseWriter, r *http.Request) {
 
 	// Validate parameters
 	v := validator.New()
-	v.Check(input.GroupID > 0, "group_id", "must be provided")
-	v.Check(input.UserID > 0, "user_id", "must be provided")
+	v.Check(len(input.GroupName) > 0, "group_name", "must be provided")
+	v.Check(len(input.UserEmail) > 0, "user_email", "must be provided")
 	if err := v.Valid("group.addUser"); err != nil {
 		app.rest.Error(w, err)
 		return
 	}
 
 	currUser := middleware.ContextGetUser(r)
-	currGroup, err := app.group.GetByGroupID(input.GroupID)
+	user, err := app.users.GetByEmail(input.UserEmail)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
 	}
+	group, err := app.group.GetByGroupName(input.GroupName)
+	if err != nil {
+		app.rest.Error(w, err)
+		return
+	}
+	currGroup, err := app.group.GetByGroupID(group.ID)
+	if err != nil {
+		app.rest.Error(w, err)
+		return
+	}
+  // check if the user is creator of the group
 	if currUser.ID != currGroup.CreatorID {
 		app.rest.WriteJSON(w, "group.addUser", http.StatusUnauthorized, rest.Envelope{
 			"Message": "Only owner can add member to the group",
 		})
 		return
 	}
-	err = app.group.AddUser(input.GroupID, input.UserID)
+	err = app.group.AddUser(group.ID, user.ID)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
@@ -68,8 +79,8 @@ func (app *Group) removeUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var input struct {
-		GroupID int64 `json:"group_id"`
-		UserID  int64 `json:"user_id"`
+		GroupName string `json:"group_name"`
+		UserEmail string `json:"user_email"`
 	}
 
 	// Parse request
@@ -80,15 +91,20 @@ func (app *Group) removeUser(w http.ResponseWriter, r *http.Request) {
 
 	// Validate parameters
 	v := validator.New()
-	v.Check(input.GroupID > 0, "group_id", "must be provided")
-	v.Check(input.UserID > 0, "user_id", "must be provided")
+	v.Check(len(input.GroupName) > 0, "group_name", "must be provided")
+	v.Check(len(input.UserEmail) > 0, "user_email", "must be provided")
 	if err := v.Valid("group.removeUser"); err != nil {
 		app.rest.Error(w, err)
 		return
 	}
 
 	currUser := middleware.ContextGetUser(r)
-	currGroup, err := app.group.GetByGroupID(input.GroupID)
+	user, err := app.users.GetByEmail(input.UserEmail)
+	if err != nil {
+		app.rest.Error(w, err)
+		return
+	}
+	currGroup, err := app.group.GetByGroupName(input.GroupName)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
@@ -99,13 +115,13 @@ func (app *Group) removeUser(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	if input.UserID == currGroup.CreatorID {
+	if user.ID == currGroup.CreatorID {
 		app.rest.WriteJSON(w, "group.removeUser", http.StatusBadRequest, rest.Envelope{
 			"Message": "Invalid user_id, trying to make create a member",
 		})
 		return
 	}
-	err = app.group.RemoveUser(input.GroupID, input.UserID)
+	err = app.group.RemoveUser(currGroup.ID, user.ID)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
