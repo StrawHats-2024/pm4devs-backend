@@ -8,15 +8,15 @@ import (
 )
 
 type SharedSecretUser struct {
-	SecretID   int64      `db:"secret_id"`  // ID of the secret
-	UserID     int64      `db:"user_id"`    // ID of the user the secret is shared with
-	Permission Permission `db:"permission"` // Permission for the shared secret
+	SecretID   int64      `db:"secret_id" json:"secret_id"`   // ID of the secret
+	UserID     int64      `db:"user_id" json:"user_id"`       // ID of the user the secret is shared with
+	Permission Permission `db:"permission" json""premission"` // Permission for the shared secret
 }
 
 type SharedSecretGroup struct {
-	SecretID   int64      `db:"secret_id"`  // ID of the secret
-	GroupID    int64      `db:"group_id"`   // ID of the group the secret is shared with
-	Permission Permission `db:"permission"` // Permission for the shared secret
+	SecretID   int64      `db:"secret_id" json:"secret_id"`   // ID of the secret
+	GroupID    int64      `db:"group_id" json:"group_id"`     // ID of the group the secret is shared with
+	Permission Permission `db:"permission" json:"permission"` // Permission for the shared secret
 }
 
 // returns list of secrets shared to other users by authenticated users
