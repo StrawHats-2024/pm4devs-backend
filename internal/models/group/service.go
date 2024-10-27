@@ -14,7 +14,8 @@ import (
 
 type GroupRepository interface {
 	GetByGroupID(id int64) (*GroupRecordWithUsers, *xerrors.AppError)
-	UpdateGroupName(newName string, groupID int64) (*GroupRecord, *xerrors.AppError)
+	GetByGroupName(name string) (*GroupRecordWithUsers, *xerrors.AppError)
+	UpdateGroupName(newName string, groupName string) (*GroupRecord, *xerrors.AppError)
 	DeleteByGroupID(groupID int64) *xerrors.AppError
 	NewRecord(name string, ownerID int64) (*GroupRecord, *xerrors.AppError)
 	AddUser(groupId, userId int64) *xerrors.AppError
@@ -105,19 +106,68 @@ func (g *Group) GetByGroupID(id int64) (*GroupRecordWithUsers, *xerrors.AppError
 	return &group, nil
 }
 
-func (g *Group) UpdateGroupName(newName string, groupID int64) (*GroupRecord, *xerrors.AppError) {
+func (g *Group) GetByGroupName(name string) (*GroupRecordWithUsers, *xerrors.AppError) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// First query to get the group details
+	queryGroup := `
+		SELECT id, name, creator_id, created_at
+		FROM groups
+		WHERE name = $1;
+	`
+
+	var group GroupRecordWithUsers
+	err := g.DB.QueryRowContext(ctx, queryGroup, name).Scan(&group.ID, &group.Name, &group.CreatorID, &group.CreatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, xerrors.DatabaseError(err, "group.GetByGroupID")
+		}
+		return nil, xerrors.DatabaseError(err, "group.GetByGroupID")
+	}
+
+	// Second query to get users related to the group
+	queryUsers := `
+		SELECT u.id, u.email
+		FROM users u
+		JOIN group_members gm ON gm.user_id = u.id
+		WHERE gm.group_id = $1;
+	`
+
+	rows, err := g.DB.QueryContext(ctx, queryUsers, group.ID)
+	if err != nil {
+		return nil, xerrors.DatabaseError(err, "group.GetByGroupID")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user users.UserRecord
+		if err := rows.Scan(&user.ID, &user.Email); err != nil {
+			return nil, xerrors.DatabaseError(err, "group.GetByGroupID")
+		}
+		group.Users = append(group.Users, &user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, xerrors.DatabaseError(err, "group.GetByGroupID")
+	}
+
+	return &group, nil
+}
+
+func (g *Group) UpdateGroupName(newName string, groupName string) (*GroupRecord, *xerrors.AppError) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	query := `
 		UPDATE groups
 		SET name = $1
-		WHERE id = $2
+		WHERE name = $2
 		RETURNING id, name, creator_id, created_at;
 	`
 
 	var updatedGroup GroupRecord
-	err := g.DB.QueryRowContext(ctx, query, newName, groupID).
+	err := g.DB.QueryRowContext(ctx, query, newName, groupName).
 		Scan(&updatedGroup.ID, &updatedGroup.Name, &updatedGroup.CreatorID, &updatedGroup.CreatedAt)
 	if err != nil {
 		return nil, xerrors.DatabaseError(err, "group.UpdateByGroupID")

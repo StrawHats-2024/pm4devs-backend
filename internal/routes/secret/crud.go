@@ -138,7 +138,7 @@ func (app *Secret) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if currSecret.OwnerID != user.ID {
-		app.rest.WriteJSON(w, "secrets.update", http.StatusUnauthorized, rest.Envelope{
+		app.rest.WriteJSON(w, "secrets.delete", http.StatusUnauthorized, rest.Envelope{
 			"message": "Only owner can delete a secret",
 		})
 		return
@@ -148,7 +148,7 @@ func (app *Secret) delete(w http.ResponseWriter, r *http.Request) {
 		app.rest.Error(w, err)
 		return
 	}
-	app.rest.WriteJSON(w, "secrets.update", http.StatusNoContent, rest.Envelope{
+	app.rest.WriteJSON(w, "secrets.delete", http.StatusNoContent, rest.Envelope{
 		"message": "Success!",
 	})
 }

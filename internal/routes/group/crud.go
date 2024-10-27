@@ -63,7 +63,7 @@ func (app *Group) createNew(w http.ResponseWriter, r *http.Request) {
 func (app *Group) delete(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
-		GroupID int64 `json:"group_id"`
+		GroupName string `json:"group_name"`
 	}
 
 	// Parse request
@@ -74,13 +74,13 @@ func (app *Group) delete(w http.ResponseWriter, r *http.Request) {
 
 	// Validate parameters
 	v := validator.New()
-	v.Check(input.GroupID > 0, "group_id", "must be provided & not zero")
+	v.Check(len(input.GroupName) > 0, "group_name", "must be provided")
 	if err := v.Valid("group.delete"); err != nil {
 		app.rest.Error(w, err)
 		return
 	}
 	currUser := middleware.ContextGetUser(r)
-	currGroup, err := app.group.GetByGroupID(input.GroupID)
+	currGroup, err := app.group.GetByGroupName(input.GroupName)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
@@ -103,7 +103,7 @@ func (app *Group) delete(w http.ResponseWriter, r *http.Request) {
 func (app *Group) update(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		NewGroupName string `json:"new_group_name"`
-		GroupID      int64  `json:"group_id"`
+		GroupName    string `json:"group_name"`
 	}
 
 	// Parse request
@@ -115,13 +115,13 @@ func (app *Group) update(w http.ResponseWriter, r *http.Request) {
 	// Validate parameters
 	v := validator.New()
 	v.Check(len(input.NewGroupName) > 4, "new_group_name", "must be provided & at least of 5 charators long")
-	v.Check(input.GroupID > 0, "group_id", "must be provided")
+	v.Check(len(input.GroupName) > 0, "group_name", "must be provided")
 	if err := v.Valid("group.update"); err != nil {
 		app.rest.Error(w, err)
 		return
 	}
 	currUser := middleware.ContextGetUser(r)
-	currGroup, err := app.group.GetByGroupID(input.GroupID)
+	currGroup, err := app.group.GetByGroupName(input.GroupName)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
@@ -132,7 +132,7 @@ func (app *Group) update(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	_, err = app.group.UpdateGroupName(input.NewGroupName, input.GroupID)
+	_, err = app.group.UpdateGroupName(input.NewGroupName, input.GroupName)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
@@ -144,7 +144,7 @@ func (app *Group) update(w http.ResponseWriter, r *http.Request) {
 func (app *Group) get(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
-		GroupID int64 `json:"group_id"`
+		GroupName string `json:"group_name"`
 	}
 	// Parse request
 	if err := app.rest.ReadJSON(w, r, "group.get", &input); err != nil {
@@ -152,12 +152,12 @@ func (app *Group) get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	v := validator.New()
-	v.Check(input.GroupID > 0, "group_id", "must be provided")
+	v.Check(len(input.GroupName) > 0, "group_name", "must be provided")
 	if err := v.Valid("group.update"); err != nil {
 		app.rest.Error(w, err)
 		return
 	}
-	res, err := app.group.GetByGroupID(input.GroupID)
+	res, err := app.group.GetByGroupName(input.GroupName)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
