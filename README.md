@@ -243,6 +243,14 @@ List of all the routes present in the API:
   - 401 Unauthorized: User not creator of the group
   - 404 Not Found: Group does not exist
 
+### 5. List user groups
+
+- **Endpoint**: `/v1/groups`
+- **Method**: GET
+- **Responses**:
+- 200 OK: Group updated successfully
+- 401 Unauthorized: User not owner of the group
+
 ## User Secrets API
 
 ### Get User Secrets
