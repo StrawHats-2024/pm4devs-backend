@@ -103,7 +103,7 @@ func (app *Secret) shareToGroup(w http.ResponseWriter, r *http.Request) {
 	// Define input structure
 	var input struct {
 		SecretID   int64              `json:"secret_id"`
-		GroupID    int64              `json:"group_id"`
+		GroupName  string             `json:"group_name"`
 		Permission secrets.Permission `json:"permission"`
 	}
 
@@ -116,7 +116,7 @@ func (app *Secret) shareToGroup(w http.ResponseWriter, r *http.Request) {
 	// Validate input
 	v := validator.New()
 	v.Check(input.SecretID > 0, "secret_id", "must be provided")
-	v.Check(input.GroupID > 0, "group_id", "must be provided")
+	v.Check(len(input.GroupName) > 0, "group_name", "must be provided")
 	v.Check(input.Permission == "read-only" || input.Permission == "read-write",
 		"permission", "must be 'read-only' or 'read-write'")
 	if err := v.Valid("secrets.shareToGroup"); err != nil {
@@ -126,11 +126,18 @@ func (app *Secret) shareToGroup(w http.ResponseWriter, r *http.Request) {
 
 	err := app.validateSecretOwnership(w, r, input.SecretID)
 	if err != nil {
+		app.rest.WriteJSON(w, "secret.shareToGroup", http.StatusUnauthorized, rest.Envelope{
+			"message": "Valied to validate ownership",
+		})
 		return
+	}
+	group, err2 := app.group.GetByGroupName(input.GroupName)
+	if err2 != nil {
+		app.rest.Error(w, err2)
 	}
 
 	// Call the method to share the secret with the group
-	if err := app.secrets.ShareToGroup(input.SecretID, input.GroupID, input.Permission); err != nil {
+	if err := app.secrets.ShareToGroup(input.SecretID, group.ID, input.Permission); err != nil {
 		app.rest.Error(w, err)
 		return
 	}
@@ -154,7 +161,7 @@ func (app *Secret) updateGroupPermission(w http.ResponseWriter, r *http.Request)
 	// Define input structure
 	var input struct {
 		SecretID   int64              `json:"secret_id"`
-		GroupID    int64              `json:"group_id"`
+		GroupName  string             `json:"group_name"`
 		Permission secrets.Permission `json:"permission"`
 	}
 
@@ -167,7 +174,7 @@ func (app *Secret) updateGroupPermission(w http.ResponseWriter, r *http.Request)
 	// Validate input
 	v := validator.New()
 	v.Check(input.SecretID > 0, "secret_id", "must be provided")
-	v.Check(input.GroupID > 0, "group_id", "must be provided")
+	v.Check(len(input.GroupName) > 0, "group_name", "must be provided")
 	v.Check(input.Permission == "read-only" || input.Permission == "read-write", "permission", "must be 'read-only' or 'read-write'")
 	if err := v.Valid("secrets.updateGroupPermission"); err != nil {
 		app.rest.Error(w, err)
@@ -178,8 +185,13 @@ func (app *Secret) updateGroupPermission(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	group, err2 := app.group.GetByGroupName(input.GroupName)
+	if err2 != nil {
+		app.rest.Error(w, err2)
+	}
+
 	// Call the method to update the permission
-	if err := app.secrets.UpdateGroupPermission(input.SecretID, input.GroupID, input.Permission); err != nil {
+	if err := app.secrets.UpdateGroupPermission(input.SecretID, group.ID, input.Permission); err != nil {
 		app.rest.Error(w, err)
 		return
 	}
@@ -197,7 +209,7 @@ func (app *Secret) updateUserPermission(w http.ResponseWriter, r *http.Request) 
 	// Define input structure
 	var input struct {
 		SecretID   int64              `json:"secret_id"`
-		UserID     int64              `json:"user_id"`
+		UserEmail  string             `json:"user_email"`
 		Permission secrets.Permission `json:"permission"`
 	}
 
@@ -210,7 +222,7 @@ func (app *Secret) updateUserPermission(w http.ResponseWriter, r *http.Request) 
 	// Validate input
 	v := validator.New()
 	v.Check(input.SecretID > 0, "secret_id", "must be provided")
-	v.Check(input.UserID > 0, "user_id", "must be provided")
+	v.Check(len(input.UserEmail) > 0, "user_email", "must be provided")
 	v.Check(input.Permission == "read-only" || input.Permission == "read-write",
 		"permission", "must be 'read-only' or 'read-write'")
 	if err := v.Valid("secrets.updateUserPermission"); err != nil {
@@ -222,8 +234,13 @@ func (app *Secret) updateUserPermission(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	user, err2 := app.users.GetByEmail(input.UserEmail)
+	if err2 != nil {
+		app.rest.Error(w, err2)
+	}
+
 	// Call the method to update the permission
-	if err := app.secrets.UpdateUserPermission(input.SecretID, input.UserID, input.Permission); err != nil {
+	if err := app.secrets.UpdateUserPermission(input.SecretID, user.ID, input.Permission); err != nil {
 		app.rest.Error(w, err)
 		return
 	}
@@ -246,8 +263,8 @@ func (app *Secret) revokeGroupPermission(w http.ResponseWriter, r *http.Request)
 
 	// Define input structure
 	var input struct {
-		SecretID int64 `json:"secret_id"`
-		GroupID  int64 `json:"group_id"`
+		SecretID  int64  `json:"secret_id"`
+		GroupName string `json:"group_name"`
 	}
 
 	// Parse the request
@@ -259,7 +276,7 @@ func (app *Secret) revokeGroupPermission(w http.ResponseWriter, r *http.Request)
 	// Validate input
 	v := validator.New()
 	v.Check(input.SecretID > 0, "secret_id", "must be provided")
-	v.Check(input.GroupID > 0, "group_id", "must be provided")
+	v.Check(len(input.GroupName) > 0, "group_id", "must be provided")
 	if err := v.Valid("secrets.revokeGroupPermission"); err != nil {
 		app.rest.Error(w, err)
 		return
@@ -270,8 +287,13 @@ func (app *Secret) revokeGroupPermission(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	group, err2 := app.group.GetByGroupName(input.GroupName)
+	if err2 != nil {
+		app.rest.Error(w, err2)
+	}
+
 	// Call the method to revoke the permission
-	if err := app.secrets.RevokeFromGroup(input.SecretID, input.GroupID); err != nil {
+	if err := app.secrets.RevokeFromGroup(input.SecretID, group.ID); err != nil {
 		app.rest.Error(w, err)
 		return
 	}
@@ -294,8 +316,8 @@ func (app *Secret) revokeUserPermission(w http.ResponseWriter, r *http.Request) 
 
 	// Define input structure
 	var input struct {
-		SecretID int64 `json:"secret_id"`
-		UserID   int64 `json:"user_id"`
+		SecretID  int64  `json:"secret_id"`
+		UserEmail string `json:"user_email"`
 	}
 
 	// Parse the request
@@ -307,7 +329,7 @@ func (app *Secret) revokeUserPermission(w http.ResponseWriter, r *http.Request) 
 	// Validate input
 	v := validator.New()
 	v.Check(input.SecretID > 0, "secret_id", "must be provided")
-	v.Check(input.UserID > 0, "user_id", "must be provided")
+	v.Check(len(input.UserEmail) > 0, "user_email", "must be provided")
 	if err := v.Valid("secrets.revokeUserPermission"); err != nil {
 		app.rest.Error(w, err)
 		return
@@ -316,9 +338,13 @@ func (app *Secret) revokeUserPermission(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		return
 	}
+	user, err2 := app.users.GetByEmail(input.UserEmail)
+	if err2 != nil {
+		app.rest.Error(w, err2)
+	}
 
 	// Call the method to revoke the permission
-	if err := app.secrets.RevokeFromUser(input.SecretID, input.UserID); err != nil {
+	if err := app.secrets.RevokeFromUser(input.SecretID, user.ID); err != nil {
 		app.rest.Error(w, err)
 		return
 	}

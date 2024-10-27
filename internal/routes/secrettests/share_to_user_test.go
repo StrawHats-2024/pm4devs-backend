@@ -48,19 +48,19 @@ func TestShareToUser(t *testing.T) {
 		// Missing or invalid SecretID and UserID
 		{
 			Name:   "MissingSecretID",
-			Body:   `{"user_id": 2, "permission": "read-only"}`,
+			Body:   `{"user_email": "test2@example.com", "permission": "read-only"}`,
 			Method: http.MethodPost,
-			Status: http.StatusUnprocessableEntity,
+			Status: http.StatusBadRequest,
 			Auth:   token,
 			FN: func(t *testing.T, result responseMessage) {
 				assert.Equal(t, result.Error["secret_id"], "must be provided")
 			},
 		},
 		{
-			Name:   "MissingUserID",
+			Name:   "MissingUserEmail",
 			Body:   `{"secret_id": 1, "permission": "read-only"}`,
 			Method: http.MethodPost,
-			Status: http.StatusUnprocessableEntity,
+			Status: http.StatusBadRequest,
 			Auth:   token,
 			FN: func(t *testing.T, result responseMessage) {
 				assert.Equal(t, result.Error["user_id"], "must be provided")
@@ -68,9 +68,9 @@ func TestShareToUser(t *testing.T) {
 		},
 		{
 			Name:   "InvalidPermission",
-			Body:   `{"secret_id": 1, "user_id": 2, "permission": "invalid"}`,
+			Body:   `{"secret_id": 1, "user_email": "test2@example.com", "permission": "invalid"}`,
 			Method: http.MethodPost,
-			Status: http.StatusUnprocessableEntity,
+			Status: http.StatusBadRequest,
 			Auth:   token,
 			FN: func(t *testing.T, result responseMessage) {
 				assert.Equal(t, result.Error["permission"], "must be 'read-only' or 'read-write'")
@@ -79,7 +79,7 @@ func TestShareToUser(t *testing.T) {
 		// Unauthorized if the user is not the owner
 		{
 			Name:   "Unauthorized",
-			Body:   `{"secret_id": 1, "user_id": 2, "permission": "read-only"}`,
+			Body:   `{"secret_id": 1, "user_email": "test@example.com", "permission": "read-only"}`,
 			Method: http.MethodPost,
 			Status: http.StatusUnauthorized,
 			Auth:   tokenTwo,
@@ -90,7 +90,7 @@ func TestShareToUser(t *testing.T) {
 		// Success case
 		{
 			Name:   "Success",
-			Body:   `{"secret_id": 1, "user_id": 2, "permission": "read-only"}`,
+			Body:   `{"secret_id": 1,"user_email": "test2@example.com", "permission": "read-only"}`,
 			Method: http.MethodPost,
 			Status: http.StatusCreated,
 			Auth:   token,
