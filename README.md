@@ -251,6 +251,34 @@ List of all the routes present in the API:
 - 200 OK: Group updated successfully
 - 401 Unauthorized: User not owner of the group
 
+### 6. Add User to Group
+
+- **Endpoint**: `/v1/groups/add_user`
+- **Method**: POST
+- **Request Body**:
+  - `group_name` (string, required): Name of the group to which the user will be added.
+  - `user_email` (string, required): Email of the user to add to the group.
+- **Responses**:
+  - **200 OK**: User added successfully.
+  - **400 Bad Request**: Invalid or missing `group_name` or `user_email`.
+  - **401 Unauthorized**: Only the group owner can add members to the group.
+  - **404 Not Found**: Group or user not found.
+
+### 7. Remove User from Group
+
+- **Endpoint**: `/v1/groups/remove_user`
+- **Method**: POST
+- **Request Body**:
+  - `group_name` (string, required): Name of the group from which the user will be removed.
+  - `user_email` (string, required): Email of the user to remove from the group.
+- **Responses**:
+  - **200 OK**: User removed successfully.
+  - **400 Bad Request**: Invalid or missing `group_name` or `user_email`, or if attempting to remove the group creator.
+  - **401 Unauthorized**: Only the group owner can remove members from the group.
+  - **404 Not Found**: Group or user not found.
+
+
+
 ## User Secrets API
 
 ### Get User Secrets

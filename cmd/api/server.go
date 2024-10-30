@@ -11,16 +11,21 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/treblle/treblle-go"
 	app "pm4devs.strawhats/internal/app"
 	"pm4devs.strawhats/internal/routes"
 )
 
 // Starts the server and handles graceful shutdown
 func serve(app *app.App) error {
+	treblle.Configure(treblle.Configuration{
+		APIKey:    app.Config.Treblle.ApiKey,
+		ProjectID: app.Config.Treblle.ProjectID,
+	})
 	// Define the server
 	srv := http.Server{
 		Addr:         fmt.Sprintf(":%d", app.Config.Port),
-		Handler:      routes.Mux(app),
+		Handler:      treblle.Middleware(routes.Mux(app)),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,

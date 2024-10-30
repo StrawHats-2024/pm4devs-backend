@@ -23,9 +23,13 @@ const (
 
 // Defines the configuration provided via command line args
 type Config struct {
-	Env  string
-	Port int
-	DB   struct {
+	Env     string
+	Port    int
+	Treblle struct {
+		ApiKey    string
+		ProjectID string
+	}
+	DB struct {
 		DSN string
 	}
 	SMTP struct {
@@ -59,6 +63,11 @@ func New() Config {
 
 	// Version
 	displayVersion := flag.Bool("version", false, "Display version and exit")
+
+	// Treblle
+
+	flag.StringVar(&cfg.Treblle.ApiKey, "tre-apikey", "", "Treblle API key")
+	flag.StringVar(&cfg.Treblle.ProjectID, "tre-projectid", "", "Treblle Project ID")
 
 	flag.Parse()
 

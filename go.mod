@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/treblle/treblle-go v0.7.2 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/mail.v2 v2.3.1 // indirect
 )
