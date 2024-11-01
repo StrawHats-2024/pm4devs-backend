@@ -204,7 +204,7 @@ List of all the routes present in the API:
   - 422 Unprocessable Entity: Validation errors
   - 409 Conflict: Group name already exists
 
-### 2. Get Group by ID
+### 2. Get Group by Name
 
 - **Endpoint**: `/v1/groups`
 - **Method**: GET
@@ -243,13 +243,13 @@ List of all the routes present in the API:
   - 401 Unauthorized: User not creator of the group
   - 404 Not Found: Group does not exist
 
-### 5. List user groups
-
-- **Endpoint**: `/v1/groups`
-- **Method**: GET
-- **Responses**:
-- 200 OK: Group updated successfully
-- 401 Unauthorized: User not owner of the group
+<!-- ### 5. List user groups -->
+<!---->
+<!-- - **Endpoint**: `/v1/groups` -->
+<!-- - **Method**: GET -->
+<!-- - **Responses**: -->
+<!-- - 200 OK: Group updated successfully -->
+<!-- - 401 Unauthorized: User not owner of the group -->
 
 ### 6. Add User to Group
 

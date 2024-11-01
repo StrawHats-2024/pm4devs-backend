@@ -1,0 +1,18 @@
+{
+    "__meta__": {
+        "about": "HTTPie session file",
+        "help": "https://httpie.io/docs#sessions",
+        "httpie": "3.2.3"
+    },
+    "auth": {
+        "raw_auth": "OBQRWXZUGRC6GIBYEUFXX2SAXA",
+        "type": "bearer"
+    },
+    "cookies": [],
+    "headers": [
+        {
+            "name": "Accept",
+            "value": "application/json, */*;q=0.5"
+        }
+    ]
+}

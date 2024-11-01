@@ -1,0 +1,71 @@
+.PHONY: help auth/login auth/register session/create secrets/get-user secrets/create \
+        groups/create groups/get groups/delete groups/update groups/add-user \
+        groups/remove-user
+
+BASE_URL := :3000/v1
+
+## help                    Show available commands
+help:
+	@echo 'Usage:'
+	@sed -n 's/^##//p' $(MAKEFILE_LIST)
+
+## auth/login email=<email> password=<password>           Log in and create a session
+auth/login:
+	@[ -n "$(email)" ] || (echo "email is required, use email=<email>"; exit 1)
+	@[ -n "$(password)" ] || (echo "password is required, use password=<password>"; exit 1)
+	http POST $(BASE_URL)/auth/login email="$(email)" password="$(password)" --session=./http.json
+
+## auth/register email=<email> password=<password>        Register a new user
+auth/register:
+	@[ -n "$(email)" ] || (echo "email is required, use email=<email>"; exit 1)
+	@[ -n "$(password)" ] || (echo "password is required, use password=<password>"; exit 1)
+	http POST $(BASE_URL)/auth/register email="$(email)" password="$(password)" --session=./http.json
+
+## session/create token=<token>                           Create a session with a bearer token
+session/create:
+	@[ -n "$(token)" ] || (echo "token is required, use token=<your_token>"; exit 1)
+	http --session=./http.json -A bearer -a "$(token)" $(BASE_URL)
+
+## secrets/get-user                                       Fetch user secrets
+secrets/get-user:
+	http --session=./http.json $(BASE_URL)/secrets/user
+
+## secrets/create name=<name> data=<encrypted_data> iv=<iv>  Create a new secret
+secrets/create:
+	@[ -n "$(name)" ] || (echo "name is required"; exit 1)
+	@[ -n "$(data)" ] || (echo "data is required"; exit 1)
+	@[ -n "$(iv)" ] || (echo "iv is required"; exit 1)
+	http POST $(BASE_URL)/secrets name="$(name)" encrypted_data="$(data)" iv="$(iv)" --session=./http.json
+
+## groups/create group_name=<group_name>                  Create a new group
+groups/create:
+	@[ -n "$(group_name)" ] || (echo "group_name is required"; exit 1)
+	http POST $(BASE_URL)/groups group_name="$(group_name)" --session=./http.json
+
+## groups/get group_name=<group_name>                     Fetch group details
+groups/get:
+	@[ -n "$(group_name)" ] || (echo "group_name is required"; exit 1)
+	http GET $(BASE_URL)/groups group_name="$(group_name)" --session=./http.json
+
+## groups/delete group_name=<group_name>                  Delete a group
+groups/delete:
+	@[ -n "$(group_name)" ] || (echo "group_name is required"; exit 1)
+	http DEL $(BASE_URL)/groups group_name="$(group_name)" --session=./http.json
+
+## groups/update group_name=<group_name> new_group_name=<new_group_name>  Update a group name
+groups/update:
+	@[ -n "$(group_name)" ] || (echo "group_name is required"; exit 1)
+	@[ -n "$(new_group_name)" ] || (echo "new_group_name is required"; exit 1)
+	http PATCH $(BASE_URL)/groups group_name="$(group_name)" new_group_name="$(new_group_name)" --session=./http.json
+
+## groups/add-user group_name=<group_name> user_email=<user_email>    Add a user to a group
+groups/add-user:
+	@[ -n "$(group_name)" ] || (echo "group_name is required"; exit 1)
+	@[ -n "$(user_email)" ] || (echo "user_email is required"; exit 1)
+	http POST $(BASE_URL)/groups/add_user group_name="$(group_name)" user_email="$(user_email)" --session=./http.json
+
+## groups/remove-user group_name=<group_name> user_email=<user_email> Remove a user from a group
+groups/remove-user:
+	@[ -n "$(group_name)" ] || (echo "group_name is required"; exit 1)
+	@[ -n "$(user_email)" ] || (echo "user_email is required"; exit 1)
+	http POST $(BASE_URL)/groups/remove_user group_name="$(group_name)" user_email="$(user_email)" --session=./http.json
