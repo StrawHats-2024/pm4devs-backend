@@ -34,7 +34,7 @@ func TestAddRemoveUserToGroup(t *testing.T) {
 	}
 
 	tests := []assert.HandlerTestCase[responseMessage]{
-		// add dummy data
+		// Add dummy data for creating a group
 		{
 			Name:   "CreateGroup/POST",
 			Auth:   token,
@@ -47,7 +47,8 @@ func TestAddRemoveUserToGroup(t *testing.T) {
 				assert.NotEqual(t, result.Data["group_name"], "")
 			},
 		},
-		// Add User
+
+		// Add User to Group
 		{
 			Name:   "AuthRequired/AddUser",
 			Status: http.StatusUnauthorized,
@@ -55,20 +56,20 @@ func TestAddRemoveUserToGroup(t *testing.T) {
 			Route:  group.AddUserToGroupRoute,
 		},
 		{
-			Name:   "InvalidGroupID/group.AddUser",
+			Name:   "InvalidGroupName/group.AddUser",
 			Auth:   token,
 			Status: http.StatusUnprocessableEntity,
 			Method: http.MethodPost,
 			Route:  group.AddUserToGroupRoute,
-			Body:   `{"group_id": 0, "user_id": 1}`,
+			Body:   `{"group_name": "", "user_email": "test2@example.com"}`,
 		},
 		{
-			Name:   "InvalidUserID/group.AddUser",
+			Name:   "InvalidUserEmail/group.AddUser",
 			Auth:   token,
 			Status: http.StatusUnprocessableEntity,
 			Method: http.MethodPost,
 			Route:  group.AddUserToGroupRoute,
-			Body:   `{"group_id": 1, "user_id": 0}`,
+			Body:   `{"group_name": "testgroup", "user_email": ""}`,
 		},
 		{
 			Name:   "NotGroupOwner/group.AddUser",
@@ -76,7 +77,7 @@ func TestAddRemoveUserToGroup(t *testing.T) {
 			Status: http.StatusUnauthorized,
 			Method: http.MethodPost,
 			Route:  group.AddUserToGroupRoute,
-			Body:   `{"group_id": 1, "user_id": 2}`,
+			Body:   `{"group_name": "testgroup", "user_email": "test2@example.com"}`,
 		},
 		{
 			Name:   "ValidRequest/group.AddUser",
@@ -84,13 +85,13 @@ func TestAddRemoveUserToGroup(t *testing.T) {
 			Status: http.StatusOK,
 			Method: http.MethodPost,
 			Route:  group.AddUserToGroupRoute,
-			Body:   `{"group_id": 1, "user_id": 2}`,
+			Body:   `{"group_name": "testgroup", "user_email": "test2@example.com"}`,
 			FN: func(t *testing.T, result responseMessage) {
 				assert.Equal(t, result.Message, "Success!")
 			},
 		},
 
-		// Remove User
+		// Remove User from Group
 		{
 			Name:   "AuthRequired/RemoveUser",
 			Status: http.StatusUnauthorized,
@@ -98,20 +99,20 @@ func TestAddRemoveUserToGroup(t *testing.T) {
 			Route:  group.RemoveUserFromGroupRoute,
 		},
 		{
-			Name:   "InvalidGroupID/group.RemoveUser",
+			Name:   "InvalidGroupName/group.RemoveUser",
 			Auth:   token,
 			Status: http.StatusUnprocessableEntity,
 			Method: http.MethodPost,
 			Route:  group.RemoveUserFromGroupRoute,
-			Body:   `{"group_id": 0, "user_id": 1}`,
+			Body:   `{"group_name": "", "user_email": "test2@example.com"}`,
 		},
 		{
-			Name:   "InvalidUserID/group.RemoveUser",
+			Name:   "InvalidUserEmail/group.RemoveUser",
 			Auth:   token,
 			Status: http.StatusUnprocessableEntity,
 			Method: http.MethodPost,
 			Route:  group.RemoveUserFromGroupRoute,
-			Body:   `{"group_id": 1, "user_id": 0}`,
+			Body:   `{"group_name": "testgroup", "user_email": ""}`,
 		},
 		{
 			Name:   "NotGroupOwner/group.RemoveUser",
@@ -119,7 +120,7 @@ func TestAddRemoveUserToGroup(t *testing.T) {
 			Status: http.StatusUnauthorized,
 			Method: http.MethodPost,
 			Route:  group.RemoveUserFromGroupRoute,
-			Body:   `{"group_id": 1, "user_id": 2}`,
+			Body:   `{"group_name": "testgroup", "user_email": "test2@example.com"}`,
 		},
 		{
 			Name:   "ValidRequest/group.RemoveUser",
@@ -127,7 +128,7 @@ func TestAddRemoveUserToGroup(t *testing.T) {
 			Status: http.StatusOK,
 			Method: http.MethodPost,
 			Route:  group.RemoveUserFromGroupRoute,
-			Body:   `{"group_id": 1, "user_id": 2}`,
+			Body:   `{"group_name": "testgroup", "user_email": "test2@example.com"}`,
 		},
 	}
 

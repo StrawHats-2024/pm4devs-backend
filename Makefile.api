@@ -2,7 +2,8 @@
         groups/create groups/get groups/delete groups/update groups/add-user \
         groups/remove-user
 
-BASE_URL := :3000/v1
+# BASE_URL := "http://159.89.173.5:3000/v1"
+BASE_URL := ":3000/v1"
 
 ## help                    Show available commands
 help:
@@ -13,13 +14,13 @@ help:
 auth/login:
 	@[ -n "$(email)" ] || (echo "email is required, use email=<email>"; exit 1)
 	@[ -n "$(password)" ] || (echo "password is required, use password=<password>"; exit 1)
-	http POST $(BASE_URL)/auth/login email="$(email)" password="$(password)" --session=./http.json
+	http POST $(BASE_URL)/auth/login email="$(email)" password="$(password)"
 
 ## auth/register email=<email> password=<password>        Register a new user
 auth/register:
 	@[ -n "$(email)" ] || (echo "email is required, use email=<email>"; exit 1)
 	@[ -n "$(password)" ] || (echo "password is required, use password=<password>"; exit 1)
-	http POST $(BASE_URL)/auth/register email="$(email)" password="$(password)" --session=./http.json
+	http POST $(BASE_URL)/auth/register email="$(email)" password="$(password)"
 
 ## session/create token=<token>                           Create a session with a bearer token
 session/create:

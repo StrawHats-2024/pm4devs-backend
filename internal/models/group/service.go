@@ -41,17 +41,50 @@ func (g *Group) NewRecord(name string, ownerID int64) (*GroupRecord, *xerrors.Ap
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
+	// Start a new transaction
+	db, ok := g.DB.(*sql.DB)
+	if !ok {
+		return nil, xerrors.DatabaseError(fmt.Errorf("failed to cast DB to *sql.DB"), "group.NewRecord")
+	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, xerrors.DatabaseError(err, "group.NewRecord")
+	}
+	// Rollback transaction in case of error
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
+
+	// Insert the new group into the groups table
 	query := `
 		INSERT INTO groups (name, creator_id, created_at)
 		VALUES ($1, $2, NOW())
 		RETURNING id, name, creator_id, created_at;
 	`
-
 	var newGroup GroupRecord
-	err := g.DB.QueryRowContext(ctx, query, name, ownerID).
+	err = tx.QueryRowContext(ctx, query, name, ownerID).
 		Scan(&newGroup.ID, &newGroup.Name, &newGroup.CreatorID, &newGroup.CreatedAt)
 	if err != nil {
-		return nil, xerrors.DatabaseError(err, "group.NewRecord")
+		return nil, xerrors.DatabaseError(err, "group.NewRecord: failed to create group")
+	}
+
+	// Add the creator as a member of the group in the group_members table
+	addUserQuery := `
+		INSERT INTO group_members (group_id, user_id)
+		VALUES ($1, $2)
+		ON CONFLICT (group_id, user_id) DO NOTHING;
+	`
+	_, err = tx.ExecContext(ctx, addUserQuery, newGroup.ID, ownerID)
+	if err != nil {
+		return nil, xerrors.DatabaseError(err, "group.NewRecord: failed to add creator as member")
+	}
+
+	// Commit the transaction
+	if err = tx.Commit(); err != nil {
+		return nil, xerrors.DatabaseError(err, "group.NewRecord: failed to commit transaction")
 	}
 
 	return &newGroup, nil

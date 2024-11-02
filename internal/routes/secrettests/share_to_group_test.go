@@ -53,10 +53,10 @@ func TestShareToGroup(t *testing.T) {
 			Status: http.StatusMethodNotAllowed,
 			Auth:   token,
 		},
-		// Missing or invalid SecretID and GroupID
+		// Missing or invalid SecretID and GroupName
 		{
 			Name:   "MissingSecretID",
-			Body:   `{"group_id": 1, "permission": "read-only"}`,
+			Body:   `{"group_name": "TestGroup", "permission": "read-only"}`,
 			Method: http.MethodPost,
 			Status: http.StatusUnprocessableEntity,
 			Auth:   token,
@@ -65,18 +65,18 @@ func TestShareToGroup(t *testing.T) {
 			},
 		},
 		{
-			Name:   "MissingGroupID",
+			Name:   "MissingGroupName",
 			Body:   `{"secret_id": 1, "permission": "read-only"}`,
 			Method: http.MethodPost,
 			Status: http.StatusUnprocessableEntity,
 			Auth:   token,
 			FN: func(t *testing.T, result responseMessage) {
-				assert.Equal(t, result.Error["group_id"], "must be provided")
+				assert.Equal(t, result.Error["group_name"], "must be provided")
 			},
 		},
 		{
 			Name:   "InvalidPermission",
-			Body:   `{"secret_id": 1, "group_id": 1, "permission": "invalid"}`,
+			Body:   `{"secret_id": 1, "group_name": "TestGroup", "permission": "invalid"}`,
 			Method: http.MethodPost,
 			Status: http.StatusUnprocessableEntity,
 			Auth:   token,
@@ -87,7 +87,7 @@ func TestShareToGroup(t *testing.T) {
 		// Unauthorized if the user is not the owner
 		{
 			Name:   "Unauthorized",
-			Body:   `{"secret_id": 1, "group_id": 1, "permission": "read-only"}`,
+			Body:   `{"secret_id": 1, "group_name": "TestGroup", "permission": "read-only"}`,
 			Method: http.MethodPost,
 			Status: http.StatusUnauthorized,
 			Auth:   tokenTwo,
@@ -98,7 +98,7 @@ func TestShareToGroup(t *testing.T) {
 		// Success case
 		{
 			Name:   "Success",
-			Body:   `{"secret_id": 1, "group_id": 1, "permission": "read-only"}`,
+			Body:   `{"secret_id": 1, "group_name": "TestGroup", "permission": "read-only"}`,
 			Method: http.MethodPost,
 			Status: http.StatusCreated,
 			Auth:   token,
@@ -154,60 +154,60 @@ func TestUpdateGroupPermission(t *testing.T) {
 	}
 
 	tests := []assert.HandlerTestCase[responseMessage]{
-		// Missing or invalid SecretID and GroupID
-		{
-			Name:   "MissingSecretID",
-			Body:   `{"group_id": 1, "permission": "read-only"}`,
-			Method: http.MethodPatch,
-			Status: http.StatusUnprocessableEntity,
-			Auth:   token,
-			FN: func(t *testing.T, result responseMessage) {
-				assert.Equal(t, result.Error["secret_id"], "must be provided")
-			},
+	// Missing or invalid SecretID and GroupName
+	{
+		Name:   "MissingSecretID",
+		Body:   `{"group_name": "TestGroup", "permission": "read-only"}`,
+		Method: http.MethodPatch,
+		Status: http.StatusUnprocessableEntity,
+		Auth:   token,
+		FN: func(t *testing.T, result responseMessage) {
+			assert.Equal(t, result.Error["secret_id"], "must be provided")
 		},
-		{
-			Name:   "MissingGroupID",
-			Body:   `{"secret_id": 1, "permission": "read-only"}`,
-			Method: http.MethodPatch,
-			Status: http.StatusUnprocessableEntity,
-			Auth:   token,
-			FN: func(t *testing.T, result responseMessage) {
-				assert.Equal(t, result.Error["group_id"], "must be provided")
-			},
+	},
+	{
+		Name:   "MissingGroupName",
+		Body:   `{"secret_id": 1, "permission": "read-only"}`,
+		Method: http.MethodPatch,
+		Status: http.StatusUnprocessableEntity,
+		Auth:   token,
+		FN: func(t *testing.T, result responseMessage) {
+			assert.Equal(t, result.Error["group_name"], "must be provided")
 		},
-		{
-			Name:   "InvalidPermission",
-			Body:   `{"secret_id": 1, "group_id": 1, "permission": "invalid"}`,
-			Method: http.MethodPatch,
-			Status: http.StatusUnprocessableEntity,
-			Auth:   token,
-			FN: func(t *testing.T, result responseMessage) {
-				assert.Equal(t, result.Error["permission"], "must be 'read-only' or 'read-write'")
-			},
+	},
+	{
+		Name:   "InvalidPermission",
+		Body:   `{"secret_id": 1, "group_name": "TestGroup", "permission": "invalid"}`,
+		Method: http.MethodPatch,
+		Status: http.StatusUnprocessableEntity,
+		Auth:   token,
+		FN: func(t *testing.T, result responseMessage) {
+			assert.Equal(t, result.Error["permission"], "must be 'read-only' or 'read-write'")
 		},
-		// Unauthorized if the user is not the owner
-		{
-			Name:   "Unauthorized",
-			Body:   `{"secret_id": 1, "group_id": 1, "permission": "read-write"}`,
-			Method: http.MethodPatch,
-			Status: http.StatusUnauthorized,
-			Auth:   tokenTwo, // User 2 trying to update User 1's group secret
-			FN: func(t *testing.T, result responseMessage) {
-				assert.Equal(t, result.Message, "Only secret owner can manage access")
-			},
+	},
+	// Unauthorized if the user is not the owner
+	{
+		Name:   "Unauthorized",
+		Body:   `{"secret_id": 1, "group_name": "TestGroup", "permission": "read-write"}`,
+		Method: http.MethodPatch,
+		Status: http.StatusUnauthorized,
+		Auth:   tokenTwo, // User 2 trying to update User 1's group secret
+		FN: func(t *testing.T, result responseMessage) {
+			assert.Equal(t, result.Message, "Only secret owner can manage access")
 		},
-		// Success case
-		{
-			Name:   "Success",
-			Body:   `{"secret_id": 1, "group_id": 1, "permission": "read-write"}`,
-			Method: http.MethodPatch,
-			Status: http.StatusOK,
-			Auth:   token,
-			FN: func(t *testing.T, result responseMessage) {
-				assert.Equal(t, result.Message, "Permission updated successfully for the group.")
-			},
+	},
+	// Success case
+	{
+		Name:   "Success",
+		Body:   `{"secret_id": 1, "group_name": "TestGroup", "permission": "read-write"}`,
+		Method: http.MethodPatch,
+		Status: http.StatusOK,
+		Auth:   token,
+		FN: func(t *testing.T, result responseMessage) {
+			assert.Equal(t, result.Message, "Permission updated successfully for the group.")
 		},
-	}
+	},
+}
 
 	for _, tc := range tests {
 		assert.RunHandlerTestCase(t, secretsHandler, tc.Method, secret.SecretShareGroupRoute, tc)
@@ -254,50 +254,50 @@ func TestRevokeGroupPermission(t *testing.T) {
 	}
 
 	tests := []assert.HandlerTestCase[responseMessage]{
-		// Missing or invalid SecretID and GroupID
-		{
-			Name:   "MissingSecretID",
-			Body:   `{"group_id": 1}`,
-			Method: http.MethodDelete,
-			Status: http.StatusUnprocessableEntity,
-			Auth:   token,
-			FN: func(t *testing.T, result responseMessage) {
-				assert.Equal(t, result.Error["secret_id"], "must be provided")
-			},
+	// Missing or invalid SecretID and GroupName
+	{
+		Name:   "MissingSecretID",
+		Body:   `{"group_name": "TestGroup"}`,
+		Method: http.MethodDelete,
+		Status: http.StatusUnprocessableEntity,
+		Auth:   token,
+		FN: func(t *testing.T, result responseMessage) {
+			assert.Equal(t, result.Error["secret_id"], "must be provided")
 		},
-		{
-			Name:   "MissingGroupID",
-			Body:   `{"secret_id": 1}`,
-			Method: http.MethodDelete,
-			Status: http.StatusUnprocessableEntity,
-			Auth:   token,
-			FN: func(t *testing.T, result responseMessage) {
-				assert.Equal(t, result.Error["group_id"], "must be provided")
-			},
+	},
+	{
+		Name:   "MissingGroupName",
+		Body:   `{"secret_id": 1}`,
+		Method: http.MethodDelete,
+		Status: http.StatusUnprocessableEntity,
+		Auth:   token,
+		FN: func(t *testing.T, result responseMessage) {
+			assert.Equal(t, result.Error["group_name"], "must be provided")
 		},
-		// Unauthorized if the user is not the owner
-		{
-			Name:   "Unauthorized",
-			Body:   `{"secret_id": 1, "group_id": 1}`,
-			Method: http.MethodDelete,
-			Status: http.StatusUnauthorized,
-			Auth:   tokenTwo, // User 2 trying to revoke User 1's group secret
-			FN: func(t *testing.T, result responseMessage) {
-				assert.Equal(t, result.Message, "Only secret owner can manage access")
-			},
+	},
+	// Unauthorized if the user is not the owner
+	{
+		Name:   "Unauthorized",
+		Body:   `{"secret_id": 1, "group_name": "TestGroup"}`,
+		Method: http.MethodDelete,
+		Status: http.StatusUnauthorized,
+		Auth:   tokenTwo, // User 2 trying to revoke User 1's group secret
+		FN: func(t *testing.T, result responseMessage) {
+			assert.Equal(t, result.Message, "Only secret owner can manage access")
 		},
-		// Success case
-		{
-			Name:   "Success",
-			Body:   `{"secret_id": 1, "group_id": 1}`,
-			Method: http.MethodDelete,
-			Status: http.StatusOK,
-			Auth:   token, // User 1 revoking permission from Group 1
-			FN: func(t *testing.T, result responseMessage) {
-				assert.Equal(t, result.Message, "Permission revoked successfully for the group.")
-			},
+	},
+	// Success case
+	{
+		Name:   "Success",
+		Body:   `{"secret_id": 1, "group_name": "TestGroup"}`,
+		Method: http.MethodDelete,
+		Status: http.StatusOK,
+		Auth:   token, // User 1 revoking permission from Group
+		FN: func(t *testing.T, result responseMessage) {
+			assert.Equal(t, result.Message, "Permission revoked successfully for the group.")
 		},
-	}
+	},
+}
 
 	for _, tc := range tests {
 		assert.RunHandlerTestCase(t, secretsHandler, tc.Method, secret.SecretShareGroupRoute, tc)
