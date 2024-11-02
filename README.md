@@ -117,7 +117,7 @@ List of all the routes present in the API:
 - **Method**: POST
 - **Request Body**:
   - `secret_id` (integer, required): ID of the secret to share
-  - `user_id` (integer, required): ID of the user to share with
+  - `user_email` (string, required): Email of the user to share with
   - `permission` (string, required): Either 'read-only' or 'read-write'
 - **Responses**:
   - 201 Created: Secret shared successfully
@@ -130,7 +130,7 @@ List of all the routes present in the API:
 - **Method**: PATCH
 - **Request Body**:
   - `secret_id` (integer, required): ID of the shared secret
-  - `user_id` (integer, required): ID of the user to update permission for
+  - `user_email` (string, required): Email of the user to share with
   - `permission` (string, required): Either 'read-only' or 'read-write'
 - **Responses**:
   - 200 OK: Permission updated successfully
@@ -143,7 +143,7 @@ List of all the routes present in the API:
 - **Method**: DELETE
 - **Request Body**:
   - `secret_id` (integer, required): ID of the shared secret
-  - `user_id` (integer, required): ID of the user to revoke access from
+  - `user_email` (string, required): Email of the user to share with
 - **Responses**:
   - 200 OK: Permission revoked successfully
   - 422 Unprocessable Entity: Validation errors
@@ -156,7 +156,7 @@ List of all the routes present in the API:
 - **Description**: Share a secret with a group, granting either read-only or read-write access.
 - **Request Body**:
   - `secret_id` (integer, required): ID of the secret to share
-  - `group_id` (integer, required): ID of the group to share with
+  - `group_name` (string, required): Name of the group to share with
   - `permission` (string, required): Either 'read-only' or 'read-write'
 - **Responses**:
   - 201 Created: Secret shared successfully
@@ -170,7 +170,7 @@ List of all the routes present in the API:
 - **Description**: Update the permission level for a group that has access to a shared secret.
 - **Request Body**:
   - `secret_id` (integer, required): ID of the shared secret
-  - `group_id` (integer, required): ID of the group to update permission for
+  - `group_name` (string, required): Name of the group to share with
   - `permission` (string, required): Either 'read-only' or 'read-write'
 - **Responses**:
   - 200 OK: Permission updated successfully
@@ -184,7 +184,7 @@ List of all the routes present in the API:
 - **Description**: Revoke a group's access to a shared secret.
 - **Request Body**:
   - `secret_id` (integer, required): ID of the shared secret
-  - `group_id` (integer, required): ID of the group to revoke access from
+  - `group_name` (string, required): Name of the group to share with
 - **Responses**:
   - 200 OK: Permission revoked successfully
   - 422 Unprocessable Entity: Validation errors

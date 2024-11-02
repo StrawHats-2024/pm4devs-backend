@@ -53,7 +53,7 @@ func (app *Secret) shareToUser(w http.ResponseWriter, r *http.Request) {
 	// Define input structure
 	var input struct {
 		SecretID   int64              `json:"secret_id"`
-		UserID     int64              `json:"user_id"`
+		UserEmail  string             `json:"user_email"`
 		Permission secrets.Permission `json:"permission"`
 	}
 
@@ -66,7 +66,7 @@ func (app *Secret) shareToUser(w http.ResponseWriter, r *http.Request) {
 	// Validate input
 	v := validator.New()
 	v.Check(input.SecretID > 0, "secret_id", "must be provided")
-	v.Check(input.UserID > 0, "user_id", "must be provided")
+	v.Check(len(input.UserEmail) > 0, "user_email", "must be provided")
 	v.Check(input.Permission == "read-only" || input.Permission == "read-write", "permission", "must be 'read-only' or 'read-write'")
 	if err := v.Valid("secrets.shareToUser"); err != nil {
 		app.rest.Error(w, err)
@@ -77,9 +77,13 @@ func (app *Secret) shareToUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+	user, err2 := app.users.GetByEmail(input.UserEmail)
+	if err2 != nil {
+		app.rest.Error(w, err2)
+	}
 
 	// Call the method to share the secret with the user
-	if err := app.secrets.ShareToUser(input.SecretID, input.UserID, input.Permission); err != nil {
+	if err := app.secrets.ShareToUser(input.SecretID, user.ID, input.Permission); err != nil {
 		app.rest.Error(w, err)
 		return
 	}
