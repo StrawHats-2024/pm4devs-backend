@@ -9,10 +9,6 @@ import (
 )
 
 const GetUserSecretsRoute = "/v1/secrets/user"
-const GetGroupSecretsRoute = "/v1/secrets/group"
-
-// TODO: impliment this
-const GetSharedByUserSecretRoute = "/v1/secrets/shared"
 
 func (app *Secret) getUserSecrets(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -31,13 +27,15 @@ func (app *Secret) getUserSecrets(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+const GetGroupSecretsRoute = "/v1/secrets/group"
+
 func (app *Secret) getGroupSecrets(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		app.rest.MethodNotAllowed(w, r, "GET")
 		return
 	}
 	var input struct {
-		GroupID int64 `json:"group_id"`
+		GroupName string `json:"group_name"`
 	}
 	// Parse request
 	if err := app.rest.ReadJSON(w, r, "secrets.getGroupSecrets", &input); err != nil {
@@ -46,14 +44,19 @@ func (app *Secret) getGroupSecrets(w http.ResponseWriter, r *http.Request) {
 	}
 	// Validate parameters
 	v := validator.New()
-	v.Check(input.GroupID > 0, "group_id", "must be provided")
+	v.Check(len(input.GroupName) > 0, "group_id", "must be provided")
 	if err := v.Valid("secrets.getGroupSecrets"); err != nil {
 		app.rest.Error(w, err)
 		return
 	}
 	user := middleware.ContextGetUser(r)
+	group, err := app.group.GetByGroupName(input.GroupName)
+	if err != nil {
+		app.rest.Error(w, err)
+		return
+	}
 	// check for permission
-	exits, err := app.group.IsUserInGroup(input.GroupID, user.ID)
+	exits, err := app.group.IsUserInGroup(group.ID, user.ID)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
@@ -64,7 +67,7 @@ func (app *Secret) getGroupSecrets(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	data, err := app.secrets.GetByGroupID(input.GroupID)
+	data, err := app.secrets.GetByGroupID(group.ID)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
@@ -74,3 +77,25 @@ func (app *Secret) getGroupSecrets(w http.ResponseWriter, r *http.Request) {
 		"data":    data,
 	})
 }
+
+const GetSecretsShareToUser = "/v1/secrets/sharedto/user"
+
+func (app *Secret) getSharedToUserSecrets(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	user := middleware.ContextGetUser(r)
+	userSecrets, err := app.secrets.GetSecretsSharedWithUser(user.ID)
+	if err != nil {
+		app.rest.Error(w, err)
+		return
+	}
+	app.rest.WriteJSON(w, "secret.createNew", http.StatusOK, rest.Envelope{
+		"message": "Success!",
+		"data":    userSecrets,
+	})
+}
+
+const GetSecretsShareByUser = "/v1/secrets/sharedby/user"
+const GetSecretsShareToGroup = "/v1/secrets/sharedto/group"

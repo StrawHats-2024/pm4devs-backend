@@ -24,7 +24,6 @@ type SecretsRepository interface {
 	GetByUserID(id int64) (*[]SecretRecord, *xerrors.AppError)
 	GetByUserEmail(email string) (*[]SecretRecord, *xerrors.AppError)
 	GetByGroupID(id int64) (*[]SecretRecord, *xerrors.AppError)
-	// GetByGroupName(name string) (*[]SecretRecord, *xerrors.AppError)
 	NewRecord(name, EncryptedData, IV string, ownerID int64) (*SecretRecord, *xerrors.AppError)
 	Delete(secretID int64) *xerrors.AppError
 	Update(secretID int64, newName, newEncryptedData, IV string) *xerrors.AppError
@@ -38,6 +37,7 @@ type SecretsRepository interface {
 	GetUserSecretPermission(userID int64, secretID int64) (Permission, *xerrors.AppError)
 	GetSecretsSharedToOtherUsers(userID int64) (*[]SharedSecretUser, *xerrors.AppError)
 	GetSecretsSharedToGroups(userID int64) (*[]SharedSecretGroup, *xerrors.AppError)
+	GetSecretsSharedWithUser(userID int64) (*[]SharedSecretDetail, *xerrors.AppError)
 }
 
 type Secrets struct {
