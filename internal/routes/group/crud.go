@@ -80,7 +80,7 @@ func (app *Group) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	currUser := middleware.ContextGetUser(r)
-	currGroup, err := app.group.GetByGroupName(input.GroupName)
+	currGroup, err := app.group.GetGroupUsers(input.GroupName)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
@@ -121,7 +121,7 @@ func (app *Group) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	currUser := middleware.ContextGetUser(r)
-	currGroup, err := app.group.GetByGroupName(input.GroupName)
+	currGroup, err := app.group.GetGroupUsers(input.GroupName)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
@@ -157,13 +157,21 @@ func (app *Group) get(w http.ResponseWriter, r *http.Request) {
 		app.rest.Error(w, err)
 		return
 	}
-	res, err := app.group.GetByGroupName(input.GroupName)
+	usersInGroup, err := app.group.GetGroupUsers(input.GroupName)
+	secretsInGroup, err := app.group.GetGroupSharedSecrets(input.GroupName)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
 	}
 	app.rest.WriteJSON(w, "group.get", http.StatusOK, rest.Envelope{
-		"Message": "Success!",
-		"Data":    res,
+		"message": "Success!",
+		"data": rest.Envelope{
+			"group_id":   usersInGroup.ID,
+			"group_name": usersInGroup.Name,
+			"created_at": usersInGroup.CreatedAt,
+			"creator_id": usersInGroup.CreatorID,
+			"users":      usersInGroup.Users,
+			"secrets":    secretsInGroup.Secrets,
+		},
 	})
 }

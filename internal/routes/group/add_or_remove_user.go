@@ -43,7 +43,7 @@ func (app *Group) addUser(w http.ResponseWriter, r *http.Request) {
 		app.rest.Error(w, err)
 		return
 	}
-	group, err := app.group.GetByGroupName(input.GroupName)
+	group, err := app.group.GetGroupUsers(input.GroupName)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
@@ -104,7 +104,7 @@ func (app *Group) removeUser(w http.ResponseWriter, r *http.Request) {
 		app.rest.Error(w, err)
 		return
 	}
-	currGroup, err := app.group.GetByGroupName(input.GroupName)
+	currGroup, err := app.group.GetGroupUsers(input.GroupName)
 	if err != nil {
 		app.rest.Error(w, err)
 		return

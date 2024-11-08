@@ -3,7 +3,7 @@
         groups/create groups/get groups/delete groups/update groups/add-user \
         groups/remove-user
 
-# BASE_URL := "http://159.89.173.5:3000/v1"
+# BASE_URL := "http://68.183.90.31:3000/v1"
 BASE_URL := ":3000/v1"
 
 ## help                    Show available commands
@@ -39,13 +39,6 @@ secrets/create:
 	@[ -n "$(iv)" ] || (echo "iv is required"; exit 1)
 	http POST $(BASE_URL)/secrets name="$(name)" encrypted_data="$(data)" iv="$(iv)" --session=./http.json
 
-## secrets/sharedto/user Share a secret with a user
-secrets/sharedto/user:
-	http GET $(BASE_URL)/secrets/sharedto/user --session=./http.json
-
-secrets/sharedto/group:
-	@[ -n "$(group_name)" ] || (echo "group_name is required"; exit 1)
-	http GET $(BASE_URL)/secrets/group group_name="$(group_name)" --session=./http.json
 
 ## groups/create group_name=<group_name>                  Create a new group
 groups/create:

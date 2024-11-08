@@ -135,7 +135,7 @@ func (app *Secret) shareToGroup(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	group, err2 := app.group.GetByGroupName(input.GroupName)
+	group, err2 := app.group.GetGroupUsers(input.GroupName)
 	if err2 != nil {
 		app.rest.Error(w, err2)
 	}
@@ -189,7 +189,7 @@ func (app *Secret) updateGroupPermission(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	group, err2 := app.group.GetByGroupName(input.GroupName)
+	group, err2 := app.group.GetGroupUsers(input.GroupName)
 	if err2 != nil {
 		app.rest.Error(w, err2)
 	}
@@ -291,7 +291,7 @@ func (app *Secret) revokeGroupPermission(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	group, err2 := app.group.GetByGroupName(input.GroupName)
+	group, err2 := app.group.GetGroupUsers(input.GroupName)
 	if err2 != nil {
 		app.rest.Error(w, err2)
 	}

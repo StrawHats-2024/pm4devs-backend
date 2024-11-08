@@ -14,7 +14,8 @@ import (
 
 type GroupRepository interface {
 	GetByGroupID(id int64) (*GroupRecordWithUsers, *xerrors.AppError)
-	GetByGroupName(name string) (*GroupRecordWithUsers, *xerrors.AppError)
+	GetGroupUsers(name string) (*GroupRecordWithUsers, *xerrors.AppError)
+	GetGroupSharedSecrets(name string) (*GroupRecordWithSecrets, *xerrors.AppError)
 	UpdateGroupName(newName string, groupName string) (*GroupRecord, *xerrors.AppError)
 	DeleteByGroupID(groupID int64) *xerrors.AppError
 	NewRecord(name string, ownerID int64) (*GroupRecord, *xerrors.AppError)
@@ -139,7 +140,7 @@ func (g *Group) GetByGroupID(id int64) (*GroupRecordWithUsers, *xerrors.AppError
 	return &group, nil
 }
 
-func (g *Group) GetByGroupName(name string) (*GroupRecordWithUsers, *xerrors.AppError) {
+func (g *Group) GetGroupUsers(name string) (*GroupRecordWithUsers, *xerrors.AppError) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -183,6 +184,75 @@ func (g *Group) GetByGroupName(name string) (*GroupRecordWithUsers, *xerrors.App
 
 	if err := rows.Err(); err != nil {
 		return nil, xerrors.DatabaseError(err, "group.GetByGroupID")
+	}
+
+	return &group, nil
+}
+
+type SharedSecretDetailForGroup struct {
+	SecretID      int64     `json:"secret_id"`
+	Name          string    `json:"name"`
+	EncryptedData []byte    `json:"encrypted_data"`
+	IV            []byte    `json:"iv"`
+	OwnerID       int64     `json:"owner_id"`
+	Permission    string    `json:"permission"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
+}
+
+type GroupRecordWithSecrets struct {
+	GroupID   int64                         `json:"group_id"`
+	Name      string                        `json:"name"`
+	CreatorID int64                         `json:"creator_id"`
+	CreatedAt time.Time                     `json:"created_at"`
+	Secrets   []*SharedSecretDetailForGroup `json:"secrets"`
+}
+
+// GetGroupSharedSecrets fetches all secrets shared with the specified group and returns full secret details.
+func (g *Group) GetGroupSharedSecrets(name string) (*GroupRecordWithSecrets, *xerrors.AppError) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// First query to get the group details
+	queryGroup := `
+        SELECT id, name, creator_id, created_at
+        FROM groups
+        WHERE name = $1;
+    `
+
+	var group GroupRecordWithSecrets
+	err := g.DB.QueryRowContext(ctx, queryGroup, name).Scan(&group.GroupID, &group.Name, &group.CreatorID, &group.CreatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, xerrors.DatabaseError(err, "group.GetGroupSharedSecrets - group not found")
+		}
+		return nil, xerrors.DatabaseError(err, "group.GetGroupSharedSecrets")
+	}
+
+	// Second query to get secrets shared with the group
+	querySecrets := `
+        SELECT s.id AS secret_id, s.name, s.encrypted_data, s.iv, s.owner_id, ssg.permission, s.created_at, s.updated_at
+        FROM secrets s
+        JOIN shared_secrets_group ssg ON ssg.secret_id = s.id
+        WHERE ssg.group_id = $1;
+    `
+
+	rows, err := g.DB.QueryContext(ctx, querySecrets, group.GroupID)
+	if err != nil {
+		return nil, xerrors.DatabaseError(err, "group.GetGroupSharedSecrets - query secrets")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var secret SharedSecretDetailForGroup
+		if err := rows.Scan(&secret.SecretID, &secret.Name, &secret.EncryptedData, &secret.IV, &secret.OwnerID, &secret.Permission, &secret.CreatedAt, &secret.UpdatedAt); err != nil {
+			return nil, xerrors.DatabaseError(err, "group.GetGroupSharedSecrets - scan secret")
+		}
+		group.Secrets = append(group.Secrets, &secret)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, xerrors.DatabaseError(err, "group.GetGroupSharedSecrets - rows error")
 	}
 
 	return &group, nil

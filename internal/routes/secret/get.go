@@ -50,7 +50,7 @@ func (app *Secret) getGroupSecrets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := middleware.ContextGetUser(r)
-	group, err := app.group.GetByGroupName(input.GroupName)
+	group, err := app.group.GetGroupUsers(input.GroupName)
 	if err != nil {
 		app.rest.Error(w, err)
 		return
