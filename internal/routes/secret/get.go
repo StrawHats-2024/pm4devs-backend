@@ -97,7 +97,7 @@ func (app *Secret) getSharedToUserSecrets(w http.ResponseWriter, r *http.Request
 	})
 }
 
-const GetSecretsShareByUser = "/v1/secrets/sharedby/user"
+const GetSecretsSharedByUser = "/v1/secrets/sharedby/user"
 
 func (app *Secret) getSharedByUserSecrets(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {

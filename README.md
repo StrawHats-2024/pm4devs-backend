@@ -177,6 +177,7 @@ List of all the routes present in the API:
   - 422 Unprocessable Entity: Validation errors
   - 401 Unauthorized: User not owner of the secret
 
+
 ### 10. Revoke Group's Permission for Shared Secret
 
 - **Endpoint**: `/v1/secrets/share/group`
@@ -189,6 +190,75 @@ List of all the routes present in the API:
   - 200 OK: Permission revoked successfully
   - 422 Unprocessable Entity: Validation errors
   - 401 Unauthorized: User not owner of the secret
+
+
+### 11. Get Secrets Shared By User
+- **Endpoint**: `/v1/secrets/sharedby/user`
+- **Method**: GET
+- **Description**: Retrieves all secrets that the authenticated user has shared with other users.
+- **Request Body**: None
+- **Response Body**:
+  ```json
+  {
+    "message": "Success!",
+    "data": [
+      {
+        // Array of shared secret objects
+      }
+    ]
+  }
+  ```
+- **Responses**:
+  - 200 OK: Successfully retrieved shared secrets
+  - 405 Method Not Allowed: Invalid HTTP method
+  - 401 Unauthorized: User not authenticated
+  - 500 Internal Server Error: Server-side error occurred
+
+### 12. Get Secrets Shared To User's Groups
+- **Endpoint**: `/v1/secrets/sharedto/group`
+- **Method**: GET 
+- **Description**: Retrieves all secrets that have been shared with groups that the authenticated user belongs to.
+- **Request Body**: None
+- **Response Body**:
+  ```json
+  {
+    "message": "Success!",
+    "data": [
+      {
+        // Array of shared secret objects
+      }
+    ]
+  }
+  ```
+- **Responses**:
+  - 200 OK: Successfully retrieved secrets shared to user's groups
+  - 405 Method Not Allowed: Invalid HTTP method
+  - 401 Unauthorized: User not authenticated
+  - 500 Internal Server Error: Server-side error occurred
+
+### 13. Get Secrets Shared To User
+- **Endpoint**: `/v1/secrets/sharedto/user`
+- **Method**: GET
+- **Description**: Retrieves all secrets that have been directly shared with the authenticated user by other users.
+- **Request Body**: None
+- **Response Body**:
+  ```json
+  {
+    "message": "Success!",
+    "data": [
+      {
+        // Array of secret objects shared with the user
+      }
+    ]
+  }
+  ```
+- **Responses**:
+  - 200 OK: Successfully retrieved secrets shared to user
+  - 405 Method Not Allowed: Invalid HTTP method
+  - 401 Unauthorized: User not authenticated
+  - 500 Internal Server Error: Server-side error occurred
+
+
 
 ## Group API
 
