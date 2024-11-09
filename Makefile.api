@@ -39,6 +39,14 @@ secrets/create:
 	@[ -n "$(iv)" ] || (echo "iv is required"; exit 1)
 	http POST $(BASE_URL)/secrets name="$(name)" encrypted_data="$(data)" iv="$(iv)" --session=./http.json
 
+## secrets/shared_to_user                                       Fetch secrets shared to user
+secrets/shared_to_user:
+	http GET $(BASE_URL)/secrets/sharedto/user --session=./http.json
+
+## secrets/shared_to_group                                       Fetch secrets shared to group
+secrets/shared_to_group:
+	http GET $(BASE_URL)/secrets/sharedto/group --session=./http.json
+
 
 ## groups/create group_name=<group_name>                  Create a new group
 groups/create:
@@ -49,6 +57,10 @@ groups/create:
 groups/get:
 	@[ -n "$(group_name)" ] || (echo "group_name is required"; exit 1)
 	http GET $(BASE_URL)/groups group_name="$(group_name)" --session=./http.json
+
+## groups/list                      Fetch user group details
+groups/list:
+	http GET $(BASE_URL)/groups/user --session=./http.json
 
 ## groups/delete group_name=<group_name>                  Delete a group
 groups/delete:

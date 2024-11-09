@@ -46,5 +46,9 @@ func (s *Secret) Route(mux *http.ServeMux, mw *middleware.Middleware) {
 	mux.HandleFunc(SecretShareGroupRoute, mw.Authenticated(s.handleShareToGroup))
 
 	mux.HandleFunc(GetGroupSecretsRoute, mw.Authenticated(s.getGroupSecrets))
-	mux.HandleFunc(GetSecretsShareToUser, mw.Authenticated(s.getSharedToUserSecrets))
+	mux.HandleFunc(GetSecretsSharedToUser, mw.Authenticated(s.getSharedToUserSecrets))
+
+	mux.HandleFunc(GetSecretsShareByUser, mw.Authenticated(s.getSharedByUserSecrets))
+
+	mux.HandleFunc(GetSecretsSharedToGroup, mw.Authenticated(s.getSharedToGroupSecrets))
 }
