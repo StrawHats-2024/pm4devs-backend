@@ -19,45 +19,66 @@ type SharedSecretGroup struct {
 	Permission Permission `db:"permission" json:"permission"` // Permission for the shared secret
 }
 
-// returns list of secrets shared to other users by authenticated users
-func (s *Secrets) GetSecretsSharedToOtherUsers(userID int64) (*[]SharedSecretUser, *xerrors.AppError) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
+type FullSharedSecretUserDetail struct {
+    SecretID      int64     `json:"secret_id"`
+    Name          string    `json:"name"`
+    EncryptedData []byte    `json:"encrypted_data"`
+    IV            []byte    `json:"iv"`
+    OwnerID       int64     `json:"owner_id"`
+    UserID        int64     `json:"user_id"`
+    Permission    string    `json:"permission"`
+    CreatedAt     time.Time `json:"created_at"`
+    UpdatedAt     time.Time `json:"updated_at"`
+}
 
-	// Prepare the SQL query to select secrets shared to other users
-	query := `
-		SELECT s.id AS secret_id, ssu.user_id, ssu.permission
-		FROM secrets s
-		JOIN shared_secrets_user ssu ON ssu.secret_id = s.id
-		WHERE s.owner_id = $1;
-	`
+func (s *Secrets) GetSecretsSharedToOtherUsers(userID int64) (*[]FullSharedSecretUserDetail, *xerrors.AppError) {
+    ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+    defer cancel()
 
-	// Execute the query
-	rows, err := s.DB.QueryContext(ctx, query, userID)
-	if err != nil {
-		return nil, xerrors.DatabaseError(err, "secrets.GetSecretsSharedToUsers")
-	}
-	defer rows.Close()
+    // Prepare the SQL query to select full secret details shared to other users
+    query := `
+        SELECT s.id AS secret_id, s.name, s.encrypted_data, s.iv, s.owner_id, ssu.user_id, ssu.permission, s.created_at, s.updated_at
+        FROM secrets s
+        JOIN shared_secrets_user ssu ON ssu.secret_id = s.id
+        WHERE s.owner_id = $1;
+    `
 
-	// Initialize a slice to hold the retrieved shared secret records
-	var sharedSecrets []SharedSecretUser
+    // Execute the query
+    rows, err := s.DB.QueryContext(ctx, query, userID)
+    if err != nil {
+        return nil, xerrors.DatabaseError(err, "secrets.GetSecretsSharedToOtherUsers - query execution")
+    }
+    defer rows.Close()
 
-	// Iterate through the rows and scan the data into SharedSecretToUser structs
-	for rows.Next() {
-		var sharedSecret SharedSecretUser
-		if err := rows.Scan(&sharedSecret.SecretID, &sharedSecret.UserID, &sharedSecret.Permission); err != nil {
-			return nil, xerrors.DatabaseError(err, "secrets.GetSecretsSharedToUsers - scan")
-		}
-		sharedSecrets = append(sharedSecrets, sharedSecret)
-	}
+    // Initialize a slice to hold the retrieved shared secret details
+    var sharedSecrets []FullSharedSecretUserDetail
 
-	// Check for any error that may have occurred during iteration
-	if err := rows.Err(); err != nil {
-		return nil, xerrors.DatabaseError(err, "secrets.GetSecretsSharedToUsers - rows error")
-	}
+    // Iterate through the rows and scan the data into FullSharedSecretUserDetail structs
+    for rows.Next() {
+        var sharedSecret FullSharedSecretUserDetail
+        if err := rows.Scan(
+            &sharedSecret.SecretID,
+            &sharedSecret.Name,
+            &sharedSecret.EncryptedData,
+            &sharedSecret.IV,
+            &sharedSecret.OwnerID,
+            &sharedSecret.UserID,
+            &sharedSecret.Permission,
+            &sharedSecret.CreatedAt,
+            &sharedSecret.UpdatedAt,
+        ); err != nil {
+            return nil, xerrors.DatabaseError(err, "secrets.GetSecretsSharedToOtherUsers - scan error")
+        }
+        sharedSecrets = append(sharedSecrets, sharedSecret)
+    }
 
-	// Return the slice of shared secret records
-	return &sharedSecrets, nil
+    // Check for any error that may have occurred during iteration
+    if err := rows.Err(); err != nil {
+        return nil, xerrors.DatabaseError(err, "secrets.GetSecretsSharedToOtherUsers - rows error")
+    }
+
+    // Return the slice of shared secret records with full details
+    return &sharedSecrets, nil
 }
 
 func (s *Secrets) GetSecretsSharedToGroups(userID int64) (*[]SharedSecretGroup, *xerrors.AppError) {
