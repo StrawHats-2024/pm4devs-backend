@@ -175,3 +175,38 @@ func (app *Group) get(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 }
+
+func (app *Group) getWithQuery(w http.ResponseWriter, r *http.Request) {
+	groupName := r.URL.Query().Get("group_name")
+
+	v := validator.New()
+	v.Check(len(groupName) > 0, "group_name", "must be provided")
+	if err := v.Valid("group.update"); err != nil {
+		app.rest.Error(w, err)
+		return
+	}
+
+	usersInGroup, err := app.group.GetGroupUsers(groupName)
+	if err != nil {
+		app.rest.Error(w, err)
+		return
+	}
+
+	secretsInGroup, err := app.group.GetGroupSharedSecrets(groupName)
+	if err != nil {
+		app.rest.Error(w, err)
+		return
+	}
+
+	app.rest.WriteJSON(w, "group.get", http.StatusOK, rest.Envelope{
+		"message": "Success!",
+		"data": rest.Envelope{
+			"group_id":   usersInGroup.ID,
+			"group_name": usersInGroup.Name,
+			"created_at": usersInGroup.CreatedAt,
+			"creator_id": usersInGroup.CreatorID,
+			"users":      usersInGroup.Users,
+			"secrets":    secretsInGroup.Secrets,
+		},
+	})
+}

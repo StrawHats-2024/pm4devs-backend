@@ -44,4 +44,5 @@ func (s *Group) Route(mux *http.ServeMux, mw *middleware.Middleware) {
 	mux.HandleFunc(AddUserToGroupRoute, mw.Authenticated(s.addUser))
 	mux.HandleFunc(RemoveUserFromGroupRoute, mw.Authenticated(s.removeUser))
 	mux.HandleFunc(ListUserGroupRoute, mw.Authenticated(s.listUserGroups))
+	mux.HandleFunc("/v1/ops/group", mw.Authenticated(s.getWithQuery))
 }
